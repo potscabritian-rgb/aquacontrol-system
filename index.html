@@ -616,153 +616,350 @@
     </div>
 
     <script>
-        // Estado actual del sistema
-        let estadoSistema = {
-            distancia: 0,
-            estadoTanque: 'Desconocido',
-            bombaEncendida: false,
-            modoAuto: true,
-            conectado: false
-        };
+// Estado actual del sistema
+let estadoSistema = {
+    distancia: 0,
+    estadoTanque: 'Desconocido',
+    bombaEncendida: false,
+    modoAuto: true,
+    conectado: false,
+    puerto: null,
+    lector: null,
+    escritor: null
+};
 
-        // Configuración
-        const config = {
-            lleno: 2.0,
-            vacio: 9.0,
-            maxNivel: 15.0,
-            updateInterval: 2000
-        };
+// Configuración
+const config = {
+    lleno: 2.0,
+    vacio: 9.0,
+    maxNivel: 15.0,
+    updateInterval: 2000
+};
 
-        // Elementos DOM
-        const nivelValue = document.getElementById('nivelValue');
-        const estadoValue = document.getElementById('estadoValue');
-        const bombaValue = document.getElementById('bombaValue');
-        const nivelPorcentaje = document.getElementById('nivelPorcentaje');
-        const modoValue = document.getElementById('modoValue');
-        const nivelFill = document.getElementById('nivelFill');
-        const logContainer = document.getElementById('logContainer');
-        const statusText = document.getElementById('statusText');
-        const btnEncender = document.getElementById('btnEncender');
-        const btnApagar = document.getElementById('btnApagar');
-        const btnAuto = document.getElementById('btnAuto');
+// Elementos DOM
+const nivelValue = document.getElementById('nivelValue');
+const estadoValue = document.getElementById('estadoValue');
+const bombaValue = document.getElementById('bombaValue');
+const nivelPorcentaje = document.getElementById('nivelPorcentaje');
+const modoValue = document.getElementById('modoValue');
+const nivelFill = document.getElementById('nivelFill');
+const logContainer = document.getElementById('logContainer');
+const statusText = document.getElementById('statusText');
+const btnEncender = document.getElementById('btnEncender');
+const btnApagar = document.getElementById('btnApagar');
+const btnAuto = document.getElementById('btnAuto');
+const connectionStatus = document.querySelector('.connection-status');
 
-        // Función para agregar log
-        function agregarLog(mensaje) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry';
-            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${mensaje}`;
-            logContainer.appendChild(logEntry);
-            logContainer.scrollTop = logContainer.scrollHeight;
+// Función para conectar con Arduino
+async function conectarArduino() {
+    try {
+        // Verificar si el navegador soporta Web Serial API
+        if (!('serial' in navigator)) {
+            throw new Error('Web Serial API no es soportada por este navegador. Usa Chrome o Edge.');
+        }
+
+        // Solicitar puerto serial
+        estadoSistema.puerto = await navigator.serial.requestPort();
+        
+        // Abrir el puerto
+        await estadoSistema.puerto.open({ baudRate: 9600 });
+        
+        // Configurar lector y escritor
+        const textDecoder = new TextDecoderStream();
+        const readableStreamClosed = estadoSistema.puerto.readable.pipeTo(textDecoder.writable);
+        estadoSistema.lector = textDecoder.readable.getReader();
+        estadoSistema.escritor = estadoSistema.puerto.writable.getWriter();
+        
+        estadoSistema.conectado = true;
+        actualizarEstadoConexion();
+        agregarLog('Conectado al Arduino exitosamente');
+        
+        // Iniciar lectura de datos
+        leerDatosArduino();
+        
+        // Solicitar estado actual
+        enviarComandoArduino('SOLICITAR_ESTADO');
+        
+    } catch (error) {
+        console.error('Error al conectar con Arduino:', error);
+        agregarLog('Error de conexión: ' + error.message);
+        estadoSistema.conectado = false;
+        actualizarEstadoConexion();
+        
+        // Volver a modo simulación
+        iniciarSimulacion();
+    }
+}
+
+// Función para leer datos del Arduino
+async function leerDatosArduino() {
+    try {
+        while (estadoSistema.conectado && estadoSistema.lector) {
+            const { value, done } = await estadoSistema.lector.read();
+            if (done) {
+                break;
+            }
             
-            // Limitar logs a 50 entradas
-            if (logContainer.children.length > 50) {
-                logContainer.removeChild(logContainer.firstChild);
+            if (value) {
+                procesarDatosArduino(value);
             }
         }
+    } catch (error) {
+        console.error('Error leyendo datos:', error);
+        agregarLog('Error leyendo datos del Arduino');
+        estadoSistema.conectado = false;
+        actualizarEstadoConexion();
+        iniciarSimulacion();
+    }
+}
 
-        // Función para actualizar la UI
-        function actualizarUI() {
-            // Actualizar nivel de agua
-            nivelValue.textContent = estadoSistema.distancia.toFixed(1) + ' cm';
-            
-            // Calcular y mostrar porcentaje (invertido porque es distancia desde arriba)
-            const porcentaje = Math.max(0, Math.min(100, 100 - (estadoSistema.distancia / config.maxNivel * 100)));
-            nivelPorcentaje.textContent = porcentaje.toFixed(0) + '%';
-            
-            // Actualizar indicador visual del nivel
-            nivelFill.style.width = porcentaje + '%';
-            
-            // Actualizar estado del tanque
-            estadoValue.textContent = estadoSistema.estadoTanque;
-            
-            // Actualizar estado de la bomba
-            bombaValue.textContent = estadoSistema.bombaEncendida ? 'ENCENDIDA' : 'APAGADA';
-            
-            // Actualizar modo
-            modoValue.textContent = estadoSistema.modoAuto ? 'Automático' : 'Manual';
-            
-            // Actualizar estado de conexión
-            if (estadoSistema.conectado) {
-                statusText.textContent = 'Conectado al sistema';
-            } else {
-                statusText.textContent = 'Desconectado - Modo simulación';
-            }
-
-            // Actualizar estado de botones
-            btnEncender.disabled = estadoSistema.modoAuto;
-            btnApagar.disabled = estadoSistema.modoAuto;
-            btnAuto.disabled = estadoSistema.modoAuto;
+// Función para procesar datos recibidos del Arduino
+function procesarDatosArduino(datos) {
+    const lineas = datos.split('\n');
+    
+    lineas.forEach(linea => {
+        linea = linea.trim();
+        if (!linea) return;
+        
+        agregarLog(`ARDUINO: ${linea}`);
+        
+        // Procesar diferentes tipos de mensajes
+        if (linea.startsWith('DISTANCIA:')) {
+            procesarDatosDistancia(linea);
+        } else if (linea.startsWith('ESTADO:')) {
+            procesarEstadoSistema(linea);
+        } else if (linea.startsWith('ESTADO_ACTUAL:')) {
+            procesarEstadoActual(linea);
+        } else if (linea.startsWith('COMANDO_OK:')) {
+            agregarLog(`Comando ejecutado: ${linea.substring(11)}`);
+        } else if (linea === 'SISTEMA_INICIADO') {
+            agregarLog('Arduino iniciado correctamente');
         }
+    });
+}
 
-        // Función para controlar la bomba
-        function controlBomba(accion) {
-            agregarLog(`Enviando comando: ${accion}`);
-            
-            // Aquí iría la llamada a la API del Arduino
-            // Por ahora simulamos la respuesta
-            setTimeout(() => {
-                if (accion === 'ON') {
-                    estadoSistema.bombaEncendida = true;
-                    estadoSistema.modoAuto = false;
-                    agregarLog('Bomba encendida manualmente');
-                } else if (accion === 'OFF') {
-                    estadoSistema.bombaEncendida = false;
-                    estadoSistema.modoAuto = false;
-                    agregarLog('Bomba apagada manualmente');
-                } else if (accion === 'AUTO') {
-                    estadoSistema.modoAuto = true;
-                    agregarLog('Modo automático activado');
-                }
-                actualizarUI();
-            }, 500);
+// Procesar datos de distancia
+function procesarDatosDistancia(linea) {
+    const partes = linea.split(',');
+    let distancia = 0;
+    let bombaEstado = '';
+    let modo = '';
+    
+    partes.forEach(parte => {
+        if (parte.startsWith('DISTANCIA:')) {
+            distancia = parseFloat(parte.substring(10));
+        } else if (parte.startsWith('BOMBA:')) {
+            bombaEstado = parte.substring(6);
+        } else if (parte.startsWith('MODO:')) {
+            modo = parte.substring(5);
         }
+    });
+    
+    estadoSistema.distancia = distancia;
+    estadoSistema.bombaEncendida = (bombaEstado === 'ON');
+    estadoSistema.modoAuto = (modo === 'AUTO');
+    
+    // Determinar estado del tanque basado en la distancia
+    if (distancia <= config.lleno) {
+        estadoSistema.estadoTanque = 'LLENO';
+    } else if (distancia >= config.vacio) {
+        estadoSistema.estadoTanque = 'VACÍO';
+    } else {
+        estadoSistema.estadoTanque = 'NIVEL NORMAL';
+    }
+    
+    actualizarUI();
+}
 
-        // Función para simular datos del Arduino
-        function simularDatosArduino() {
-            // Simular lectura de distancia (entre 0 y 15 cm)
-            const nuevaDistancia = Math.random() * 15;
-            estadoSistema.distancia = nuevaDistancia;
-            
-            // Determinar estado del tanque
-            if (nuevaDistancia <= config.lleno) {
-                estadoSistema.estadoTanque = 'LLENO';
-            } else if (nuevaDistancia >= config.vacio) {
-                estadoSistema.estadoTanque = 'VACÍO';
-            } else {
-                estadoSistema.estadoTanque = 'NIVEL NORMAL';
-            }
-
-            // Simular modo automático
-            if (estadoSistema.modoAuto) {
-                if (nuevaDistancia <= config.lleno && estadoSistema.bombaEncendida) {
-                    estadoSistema.bombaEncendida = false;
-                    agregarLog('Tanque LLENO → Bomba APAGADA (Automático)');
-                } else if (nuevaDistancia >= config.vacio && !estadoSistema.bombaEncendida) {
-                    estadoSistema.bombaEncendida = true;
-                    agregarLog('Tanque VACÍO → Bomba ENCENDIDA (Automático)');
-                }
-            }
-
-            estadoSistema.conectado = true;
-            actualizarUI();
+// Procesar estado del sistema
+function procesarEstadoSistema(linea) {
+    const partes = linea.split(',');
+    
+    partes.forEach(parte => {
+        if (parte.startsWith('ESTADO:')) {
+            estadoSistema.estadoTanque = parte.substring(7);
+        } else if (parte.startsWith('BOMBA:')) {
+            estadoSistema.bombaEncendida = (parte.substring(6) === 'ON');
+        } else if (parte.startsWith('MODO:')) {
+            estadoSistema.modoAuto = (parte.substring(5) === 'AUTO');
         }
+    });
+    
+    actualizarUI();
+}
 
-        // Inicialización
-        function init() {
-            agregarLog('Sistema NivelUPC iniciado');
-            agregarLog('Modo simulación activado');
-            agregarLog(`Configuración: LLENO ≤ ${config.lleno}cm, VACÍO ≥ ${config.vacio}cm`);
-            
-            // Simular datos cada 2 segundos
-            setInterval(simularDatosArduino, config.updateInterval);
-            
-            // Actualizar UI inicial
-            actualizarUI();
+// Procesar estado actual
+function procesarEstadoActual(linea) {
+    const partes = linea.substring(14).split(',');
+    
+    partes.forEach(parte => {
+        if (parte.startsWith('BOMBA:')) {
+            estadoSistema.bombaEncendida = (parte.substring(6) === 'ON');
+        } else if (parte.startsWith('MODO:')) {
+            estadoSistema.modoAuto = (parte.substring(5) === 'AUTO');
         }
+    });
+    
+    actualizarUI();
+}
 
-        // Iniciar la aplicación
-        init();
+// Función para enviar comandos al Arduino
+async function enviarComandoArduino(comando) {
+    if (estadoSistema.conectado && estadoSistema.escritor) {
+        try {
+            await estadoSistema.escritor.write(new TextEncoder().encode(comando + '\n'));
+            agregarLog(`Enviado: ${comando}`);
+        } catch (error) {
+            console.error('Error enviando comando:', error);
+            agregarLog('Error enviando comando al Arduino');
+        }
+    } else {
+        agregarLog('Sistema no conectado - Comando no enviado');
+    }
+}
+
+// Función para actualizar estado de conexión
+function actualizarEstadoConexion() {
+    if (estadoSistema.conectado) {
+        statusText.textContent = 'Conectado al Arduino';
+        connectionStatus.style.background = 'var(--gris-claro)';
+    } else {
+        statusText.textContent = 'Desconectado - Modo simulación';
+        connectionStatus.style.background = 'rgba(255, 0, 0, 0.1)';
+    }
+    actualizarUI();
+}
+
+// Función para agregar log
+function agregarLog(mensaje) {
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry';
+    logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${mensaje}`;
+    logContainer.appendChild(logEntry);
+    logContainer.scrollTop = logContainer.scrollHeight;
+    
+    // Limitar logs a 50 entradas
+    if (logContainer.children.length > 50) {
+        logContainer.removeChild(logContainer.firstChild);
+    }
+}
+
+// Función para actualizar la UI
+function actualizarUI() {
+    // Actualizar nivel de agua
+    nivelValue.textContent = estadoSistema.distancia.toFixed(1) + ' cm';
+    
+    // Calcular y mostrar porcentaje (invertido porque es distancia desde arriba)
+    const porcentaje = Math.max(0, Math.min(100, 100 - (estadoSistema.distancia / config.maxNivel * 100)));
+    nivelPorcentaje.textContent = porcentaje.toFixed(0) + '%';
+    
+    // Actualizar indicador visual del nivel
+    nivelFill.style.width = porcentaje + '%';
+    
+    // Actualizar estado del tanque
+    estadoValue.textContent = estadoSistema.estadoTanque;
+    
+    // Actualizar estado de la bomba
+    bombaValue.textContent = estadoSistema.bombaEncendida ? 'ENCENDIDA' : 'APAGADA';
+    bombaValue.style.color = estadoSistema.bombaEncendida ? 'var(--verde-medio)' : 'var(--gris-medio)';
+    
+    // Actualizar modo
+    modoValue.textContent = estadoSistema.modoAuto ? 'Automático' : 'Manual';
+    
+    // Actualizar estado de botones
+    btnEncender.disabled = estadoSistema.modoAuto;
+    btnApagar.disabled = estadoSistema.modoAuto;
+    btnAuto.disabled = estadoSistema.modoAuto;
+}
+
+// Función para controlar la bomba
+function controlBomba(accion) {
+    if (estadoSistema.conectado) {
+        // Enviar comando al Arduino
+        if (accion === 'ON') {
+            enviarComandoArduino('BOMBA:ON');
+        } else if (accion === 'OFF') {
+            enviarComandoArduino('BOMBA:OFF');
+        } else if (accion === 'AUTO') {
+            enviarComandoArduino('MODO:AUTO');
+        }
+    } else {
+        // Modo simulación
+        agregarLog(`Modo simulación: ${accion}`);
+        
+        if (accion === 'ON') {
+            estadoSistema.bombaEncendida = true;
+            estadoSistema.modoAuto = false;
+            agregarLog('Bomba encendida manualmente (Simulación)');
+        } else if (accion === 'OFF') {
+            estadoSistema.bombaEncendida = false;
+            estadoSistema.modoAuto = false;
+            agregarLog('Bomba apagada manualmente (Simulación)');
+        } else if (accion === 'AUTO') {
+            estadoSistema.modoAuto = true;
+            agregarLog('Modo automático activado (Simulación)');
+        }
+        actualizarUI();
+    }
+}
+
+// Función para simular datos (cuando no hay Arduino)
+function simularDatosArduino() {
+    if (estadoSistema.conectado) return; // No simular si está conectado
+    
+    // Simular lectura de distancia (entre 0 y 15 cm)
+    const nuevaDistancia = Math.random() * 15;
+    estadoSistema.distancia = nuevaDistancia;
+    
+    // Determinar estado del tanque
+    if (nuevaDistancia <= config.lleno) {
+        estadoSistema.estadoTanque = 'LLENO';
+    } else if (nuevaDistancia >= config.vacio) {
+        estadoSistema.estadoTanque = 'VACÍO';
+    } else {
+        estadoSistema.estadoTanque = 'NIVEL NORMAL';
+    }
+
+    // Simular modo automático
+    if (estadoSistema.modoAuto) {
+        if (nuevaDistancia <= config.lleno && estadoSistema.bombaEncendida) {
+            estadoSistema.bombaEncendida = false;
+            agregarLog('Tanque LLENO → Bomba APAGADA (Automático - Simulación)');
+        } else if (nuevaDistancia >= config.vacio && !estadoSistema.bombaEncendida) {
+            estadoSistema.bombaEncendida = true;
+            agregarLog('Tanque VACÍO → Bomba ENCENDIDA (Automático - Simulación)');
+        }
+    }
+
+    actualizarUI();
+}
+
+// Iniciar simulación (cuando no hay Arduino conectado)
+function iniciarSimulacion() {
+    agregarLog('Modo simulación activado');
+    setInterval(simularDatosArduino, config.updateInterval);
+}
+
+// Inicialización
+function init() {
+    agregarLog('Sistema NivelUPC iniciado');
+    
+    // Hacer el botón de conexión clickeable
+    connectionStatus.style.cursor = 'pointer';
+    connectionStatus.title = 'Haz clic para conectar con Arduino';
+    connectionStatus.addEventListener('click', conectarArduino);
+    
+    // Iniciar simulación por defecto
+    iniciarSimulacion();
+    
+    // Actualizar UI inicial
+    actualizarUI();
+}
+
+// Iniciar la aplicación
+init();
     </script>
 </body>
 </html>
+
