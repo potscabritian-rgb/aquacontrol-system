@@ -3,17 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AquaControl | Sistema de Nivel de Agua</title>
+    <title>NivelUPC | Sistema de Control de Nivel de Agua</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --verde-oscuro: #0D7339;
-            --verde-medio: #57A641;
-            --verde-claro: #94BF75;
-            --amarillo: #F2CC0C;
-            --negro: #0D0D0D;
-            --blanco: #FFFFFF;
+            --azul-oscuro: #0A2463;
+            --azul-medio: #1E4095;
+            --azul-claro: #3A7CA5;
+            --celeste: #61A5C2;
+            --verde: #4CAF50;
+            --amarillo: #FFC107;
+            --rojo: #F44336;
+            --gris-oscuro: #212121;
+            --gris-medio: #757575;
             --gris-claro: #F5F5F5;
+            --blanco: #FFFFFF;
+            --sombra: 0 8px 20px rgba(0, 0, 0, 0.12);
+            --sombra-hover: 0 12px 28px rgba(0, 0, 0, 0.15);
         }
         
         * {
@@ -24,8 +30,8 @@
         }
         
         body {
-            background: linear-gradient(135deg, var(--verde-oscuro) 0%, var(--verde-medio) 100%);
-            color: var(--negro);
+            background: linear-gradient(135deg, var(--azul-oscuro) 0%, var(--azul-medio) 100%);
+            color: var(--gris-oscuro);
             min-height: 100vh;
             padding: 20px;
         }
@@ -43,7 +49,19 @@
             background: var(--blanco);
             padding: 20px 30px;
             border-radius: 15px 15px 0 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: var(--sombra);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--azul-oscuro), var(--celeste));
         }
         
         .logo-section {
@@ -55,7 +73,7 @@
         .logo-placeholder {
             width: 60px;
             height: 60px;
-            background: var(--verde-oscuro);
+            background: var(--azul-oscuro);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -65,14 +83,14 @@
         }
         
         .logo-text h1 {
-            color: var(--verde-oscuro);
+            color: var(--azul-oscuro);
             font-size: 1.8em;
             margin-bottom: 5px;
+            font-weight: 700;
         }
         
         .logo-text p {
-            color: var(--negro);
-            opacity: 0.7;
+            color: var(--gris-medio);
             font-size: 0.9em;
         }
         
@@ -84,13 +102,14 @@
             padding: 10px 20px;
             border-radius: 50px;
             font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         .status-dot {
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: var(--verde-medio);
+            background: var(--verde);
             animation: pulse 2s infinite;
         }
         
@@ -103,15 +122,9 @@
         /* Panel principal */
         .dashboard {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
             margin-top: 20px;
-        }
-        
-        @media (max-width: 900px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
         }
         
         /* Tarjetas de estado */
@@ -125,13 +138,25 @@
             background: var(--blanco);
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: var(--sombra);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--celeste);
         }
         
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: var(--sombra-hover);
         }
         
         .card-header {
@@ -152,23 +177,23 @@
         }
         
         .nivel-icon {
-            background: rgba(13, 115, 57, 0.1);
-            color: var(--verde-oscuro);
+            background: rgba(10, 36, 99, 0.1);
+            color: var(--azul-oscuro);
         }
         
         .tanque-icon {
-            background: rgba(87, 166, 65, 0.1);
-            color: var(--verde-medio);
+            background: rgba(30, 64, 149, 0.1);
+            color: var(--azul-medio);
         }
         
         .bomba-icon {
-            background: rgba(242, 204, 12, 0.1);
-            color: var(--amarillo);
+            background: rgba(97, 165, 194, 0.1);
+            color: var(--celeste);
         }
         
         .card-title {
             font-size: 1.1em;
-            color: var(--negro);
+            color: var(--gris-oscuro);
             font-weight: 600;
         }
         
@@ -179,15 +204,15 @@
         }
         
         .nivel-value {
-            color: var(--verde-oscuro);
+            color: var(--azul-oscuro);
         }
         
         .tanque-value {
-            color: var(--verde-medio);
+            color: var(--azul-medio);
         }
         
         .bomba-value {
-            color: var(--amarillo);
+            color: var(--celeste);
         }
         
         .card-footer {
@@ -200,80 +225,25 @@
         
         .card-label {
             font-size: 0.9em;
-            color: var(--negro);
-            opacity: 0.7;
+            color: var(--gris-medio);
         }
         
-        /* Visualización del tanque */
-        .tanque-container {
-            background: var(--blanco);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        
-        .tanque-visual {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            background: linear-gradient(to top, #e0e0e0, #f5f5f5);
+        /* Indicador de nivel */
+        .nivel-indicator {
+            margin-top: 15px;
+            background: var(--gris-claro);
             border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            position: relative;
+            height: 12px;
             overflow: hidden;
-            border: 3px solid var(--verde-claro);
-        }
-        
-        .nivel-agua {
-            background: linear-gradient(to top, var(--verde-oscuro), var(--verde-medio));
-            border-radius: 8px 8px 0 0;
-            transition: height 1.5s ease;
-            height: 30%;
             position: relative;
         }
         
-        .nivel-agua::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 20px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 8px 8px 0 0;
-        }
-        
-        .marcas-nivel {
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 10px 0;
-        }
-        
-        .marca {
-            display: flex;
-            align-items: center;
-            font-size: 0.8em;
-            color: var(--negro);
-            opacity: 0.7;
-        }
-        
-        .marca::before {
-            content: '';
-            width: 10px;
-            height: 1px;
-            background: var(--negro);
-            margin-right: 5px;
+        .nivel-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--azul-oscuro), var(--celeste));
+            border-radius: 10px;
+            transition: width 1.5s ease;
+            width: 0%;
         }
         
         /* Panel de control */
@@ -281,13 +251,25 @@
             background: var(--blanco);
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: var(--sombra);
             margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .control-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--azul-oscuro), var(--celeste));
         }
         
         .control-title {
             font-size: 1.3em;
-            color: var(--verde-oscuro);
+            color: var(--azul-oscuro);
             margin-bottom: 20px;
             display: flex;
             align-items: center;
@@ -312,38 +294,69 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.2);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .btn:hover::after {
+            transform: translateX(0);
         }
         
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .btn:disabled::after {
+            display: none;
         }
         
         .btn-on {
-            background: var(--verde-medio);
+            background: var(--verde);
             color: var(--blanco);
         }
         
         .btn-on:hover:not(:disabled) {
-            background: var(--verde-oscuro);
+            background: #3d8b40;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
         }
         
         .btn-off {
-            background: var(--amarillo);
-            color: var(--negro);
+            background: var(--rojo);
+            color: var(--blanco);
         }
         
         .btn-off:hover:not(:disabled) {
-            background: #e0b90a;
+            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(244, 67, 54, 0.3);
         }
         
         .btn-auto {
-            background: var(--verde-claro);
-            color: var(--negro);
+            background: var(--celeste);
+            color: var(--blanco);
         }
         
         .btn-auto:hover:not(:disabled) {
-            background: #83ad67;
+            background: #4a8ba5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(97, 165, 194, 0.3);
         }
         
         /* Sección de logs */
@@ -351,13 +364,25 @@
             background: var(--blanco);
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: var(--sombra);
             margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .log-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--azul-oscuro), var(--celeste));
         }
         
         .log-title {
             font-size: 1.3em;
-            color: var(--verde-oscuro);
+            color: var(--azul-oscuro);
             margin-bottom: 15px;
             display: flex;
             align-items: center;
@@ -372,15 +397,17 @@
             border-radius: 10px;
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
+            border: 1px solid rgba(0,0,0,0.05);
         }
         
         .log-entry {
             margin-bottom: 8px;
             padding: 8px 12px;
-            border-left: 3px solid var(--verde-medio);
+            border-left: 3px solid var(--celeste);
             background: var(--blanco);
             border-radius: 0 5px 5px 0;
             animation: fadeIn 0.5s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         @keyframes fadeIn {
@@ -389,7 +416,7 @@
         }
         
         .timestamp {
-            color: var(--verde-oscuro);
+            color: var(--azul-oscuro);
             font-weight: 600;
             margin-right: 10px;
         }
@@ -403,6 +430,41 @@
             opacity: 0.8;
             font-size: 0.9em;
         }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .logo-section {
+                flex-direction: column;
+            }
+            
+            .control-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .card-value {
+                font-size: 2.2em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .control-panel, .log-section {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -411,11 +473,11 @@
         <div class="header">
             <div class="logo-section">
                 <div class="logo-placeholder">
-                    <i class="fas fa-tint"></i>
+                    <i class="fas fa-water"></i>
                 </div>
                 <div class="logo-text">
-                    <h1>AquaControl</h1>
-                    <p>Sistema de Control de Nivel de Agua</p>
+                    <h1>NivelUPC</h1>
+                    <p>Sistema Inteligente de Control de Nivel</p>
                 </div>
             </div>
             <div class="connection-status">
@@ -426,71 +488,47 @@
         
         <div class="dashboard">
             <!-- Tarjetas de estado -->
-            <div class="status-cards">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon nivel-icon">
-                            <i class="fas fa-ruler-vertical"></i>
-                        </div>
-                        <div class="card-title">Nivel de Agua</div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon nivel-icon">
+                        <i class="fas fa-ruler-vertical"></i>
                     </div>
-                    <div class="card-value nivel-value" id="nivelValue">--</div>
-                    <div class="card-footer">
-                        <span class="card-label">Distancia medida por sensor</span>
-                        <span class="card-label" id="nivelPorcentaje">--%</span>
-                    </div>
+                    <div class="card-title">Nivel de Agua</div>
                 </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon tanque-icon">
-                            <i class="fas fa-water"></i>
-                        </div>
-                        <div class="card-title">Estado del Tanque</div>
-                    </div>
-                    <div class="card-value tanque-value" id="estadoValue">--</div>
-                    <div class="card-footer">
-                        <span class="card-label">Estado actual del sistema</span>
-                    </div>
+                <div class="card-value nivel-value" id="nivelValue">--</div>
+                <div class="nivel-indicator">
+                    <div class="nivel-fill" id="nivelFill"></div>
                 </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon bomba-icon">
-                            <i class="fas fa-power-off"></i>
-                        </div>
-                        <div class="card-title">Estado de la Bomba</div>
-                    </div>
-                    <div class="card-value bomba-value" id="bombaValue">--</div>
-                    <div class="card-footer">
-                        <span class="card-label">Bomba de agua</span>
-                        <span class="card-label" id="modoValue">--</span>
-                    </div>
+                <div class="card-footer">
+                    <span class="card-label">Distancia medida por sensor</span>
+                    <span class="card-label" id="nivelPorcentaje">--%</span>
                 </div>
             </div>
             
-            <!-- Visualización del tanque -->
-            <div class="tanque-container">
+            <div class="card">
                 <div class="card-header">
                     <div class="card-icon tanque-icon">
-                        <i class="fas fa-container-storage"></i>
+                        <i class="fas fa-tint"></i>
                     </div>
-                    <div class="card-title">Visualización del Tanque</div>
+                    <div class="card-title">Estado del Tanque</div>
                 </div>
-                
-                <div class="tanque-visual">
-                    <div class="marcas-nivel">
-                        <div class="marca">0 cm</div>
-                        <div class="marca">5 cm</div>
-                        <div class="marca">10 cm</div>
-                        <div class="marca">15 cm</div>
-                    </div>
-                    <div class="nivel-agua" id="nivelAgua"></div>
-                </div>
-                
+                <div class="card-value tanque-value" id="estadoValue">--</div>
                 <div class="card-footer">
-                    <span class="card-label">Tanque de almacenamiento</span>
-                    <span class="card-label">Capacidad: 15 cm</span>
+                    <span class="card-label">Estado actual del sistema</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon bomba-icon">
+                        <i class="fas fa-power-off"></i>
+                    </div>
+                    <div class="card-title">Estado de la Bomba</div>
+                </div>
+                <div class="card-value bomba-value" id="bombaValue">--</div>
+                <div class="card-footer">
+                    <span class="card-label">Bomba de agua</span>
+                    <span class="card-label" id="modoValue">--</span>
                 </div>
             </div>
         </div>
@@ -525,7 +563,7 @@
         
         <!-- Footer -->
         <div class="footer">
-            <p>AquaControl System &copy; 2023 - Monitoreo y control de nivel de agua en tiempo real</p>
+            <p>NivelUPC &copy; 2025 - Sistema Inteligente de Control de Nivel de Agua</p>
         </div>
     </div>
 
@@ -553,7 +591,7 @@
         const bombaValue = document.getElementById('bombaValue');
         const nivelPorcentaje = document.getElementById('nivelPorcentaje');
         const modoValue = document.getElementById('modoValue');
-        const nivelAgua = document.getElementById('nivelAgua');
+        const nivelFill = document.getElementById('nivelFill');
         const logContainer = document.getElementById('logContainer');
         const statusText = document.getElementById('statusText');
         const btnEncender = document.getElementById('btnEncender');
@@ -584,9 +622,8 @@
             const porcentaje = Math.max(0, Math.min(100, 100 - (estadoSistema.distancia / config.maxNivel * 100)));
             nivelPorcentaje.textContent = porcentaje.toFixed(0) + '%';
             
-            // Actualizar visualización del tanque
-            const alturaAgua = Math.max(0, Math.min(100, 100 - (estadoSistema.distancia / config.maxNivel * 100)));
-            nivelAgua.style.height = `${alturaAgua}%`;
+            // Actualizar indicador visual del nivel
+            nivelFill.style.width = porcentaje + '%';
             
             // Actualizar estado del tanque
             estadoValue.textContent = estadoSistema.estadoTanque;
@@ -665,7 +702,7 @@
 
         // Inicialización
         function init() {
-            agregarLog('Sistema AquaControl iniciado');
+            agregarLog('Sistema NivelUPC iniciado');
             agregarLog('Modo simulación activado');
             agregarLog(`Configuración: LLENO ≤ ${config.lleno}cm, VACÍO ≥ ${config.vacio}cm`);
             
