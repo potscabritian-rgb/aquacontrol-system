@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Calibrado de Nivel</title>
+    <title>Control de Nivel Calibrado</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #1a73e8;
@@ -373,6 +374,141 @@
             background: var(--warning-light);
         }
         
+        /* Nuevos estilos para mejoras visuales */
+        .contenedor-icono {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            margin-right: 10px;
+        }
+        
+        .contenedor-icono i {
+            color: var(--primary);
+            font-size: 18px;
+        }
+        
+        .estado-conexion {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .indicador-estado {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .indicador-conectado {
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+        
+        .indicador-desconectado {
+            background-color: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+        }
+        
+        .indicador-conectando {
+            background-color: var(--warning);
+            box-shadow: 0 0 8px var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .tarjeta-datos {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .tarjeta-datos h4 {
+            font-size: 16px;
+            color: var(--gray-600);
+            margin-bottom: 10px;
+        }
+        
+        .tarjeta-datos .valor {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .tarjeta-datos .unidad {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-left: 5px;
+        }
+        
+        .tarjeta-datos .descripcion {
+            font-size: 12px;
+            color: var(--gray-600);
+            margin-top: 5px;
+        }
+        
+        .contenedor-tarjetas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .contenedor-barra {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .etiquetas-barra {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+        
+        .etiqueta-min {
+            text-align: left;
+        }
+        
+        .etiqueta-max {
+            text-align: right;
+        }
+        
+        .etiqueta-actual {
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .seccion-control {
+            margin-top: 30px;
+            border-top: 1px solid var(--gray-200);
+            padding-top: 20px;
+        }
+        
+        .titulo-seccion {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
         @media (max-width: 768px) {
             .contenedor {
                 padding: 24px;
@@ -386,37 +522,55 @@
             .botones-conexion {
                 flex-direction: column;
             }
+            
+            .contenedor-tarjetas {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="contenedor">
         <div class="header">
-            <h1>Control Calibrado de Nivel</h1>
-            <p>Sistema con calibración precisa: 12cm = 0% • 3.5cm = 100%</p>
+            <h1><i class="fas fa-tint"></i> Control de Nivel Calibrado</h1>
+            <p>Sistema de monitoreo y control con calibración precisa</p>
         </div>
         
         <div class="estado desconectado" id="estadoConexion">
-            <span>🔴</span>
-            <span>DESCONECTADO - Haz clic para conectar</span>
+            <div class="estado-conexion">
+                <span class="indicador-estado indicador-desconectado"></span>
+                <span>DESCONECTADO - Haz clic para conectar</span>
+            </div>
         </div>
         
         <div class="calibracion-info">
             <div class="calibracion-texto">
-                📏 CALIBRACIÓN: 12.0cm = 0% (Vacío) • 3.5cm = 100% (Lleno)
+                <i class="fas fa-ruler"></i> CALIBRACIÓN: 12.0cm = 0% (Vacío) • 3.5cm = 100% (Lleno)
             </div>
             <div class="calibracion-regla">
-                ⚡ REGLA: BOMBA ON si >3.5cm • BOMBA OFF si ≤3.5cm
+                <i class="fas fa-bolt"></i> REGLA: BOMBA ON si >3.5cm • BOMBA OFF si ≤3.5cm
             </div>
         </div>
         
         <div class="panel-principal" id="panelPrincipal" style="display: none;">
             <div class="info-box">
-                <h3>📊 Medición</h3>
-                <div class="valor-grande" id="valorDistancia">-- cm</div>
-                <div class="info-box-footer">Distancia del sensor</div>
+                <h3><i class="fas fa-chart-line"></i> Medición</h3>
                 
-                <div class="barra-contenedor">
+                <div class="contenedor-tarjetas">
+                    <div class="tarjeta-datos">
+                        <h4>Distancia del sensor</h4>
+                        <div class="valor" id="valorDistancia">--<span class="unidad">cm</span></div>
+                        <div class="descripcion">Distancia medida por el sensor ultrasónico</div>
+                    </div>
+                    
+                    <div class="tarjeta-datos">
+                        <h4>Nivel de llenado</h4>
+                        <div class="valor" id="valorPorcentaje">--<span class="unidad">%</span></div>
+                        <div class="descripcion">Porcentaje calculado según calibración</div>
+                    </div>
+                </div>
+                
+                <div class="contenedor-barra">
                     <div class="barra-nivel">
                         <div class="nivel-agua" id="nivelAgua"></div>
                         <div class="marcas-calibracion">
@@ -437,39 +591,56 @@
                             </div>
                         </div>
                     </div>
-                    <div class="porcentaje-grande" id="valorPorcentaje">--%</div>
-                    <div class="info-box-footer">Nivel de llenado</div>
+                    <div class="etiquetas-barra">
+                        <div class="etiqueta-min">Vacío (0%)</div>
+                        <div class="etiqueta-actual" id="etiquetaActual">--%</div>
+                        <div class="etiqueta-max">Lleno (100%)</div>
+                    </div>
                 </div>
             </div>
             
             <div class="info-box">
-                <h3>⚡ Control Bomba</h3>
-                <div class="valor-grande" id="estadoBomba">--</div>
-                <div class="info-box-footer">Estado automático</div>
+                <h3><i class="fas fa-cog"></i> Control Bomba</h3>
+                
+                <div class="contenedor-tarjetas">
+                    <div class="tarjeta-datos">
+                        <h4>Estado de la bomba</h4>
+                        <div class="valor" id="estadoBomba">--</div>
+                        <div class="descripcion">Estado actual del sistema</div>
+                    </div>
+                </div>
                 
                 <div class="control-bomba">
-                    <div class="icono-bomba" id="iconoBomba">⚫</div>
+                    <div class="icono-bomba" id="iconoBomba">
+                        <i class="fas fa-circle" style="color: #dadce0;"></i>
+                    </div>
                     <div class="info-bomba" id="infoBomba">
-                        Control automático activo
+                        Sistema desconectado
                     </div>
 
-                    <div class="modo-control">
-                        <div class="modo-texto" id="textoModo">Modo: AUTOMÁTICO</div>
-                        <button class="boton boton-warning boton-control" id="botonCambiarModo" onclick="cambiarModo()">
-                            <span>🔄</span>
-                            <span>Cambiar a MODO MANUAL</span>
-                        </button>
-                    </div>
+                    <div class="seccion-control">
+                        <div class="titulo-seccion">
+                            <i class="fas fa-sliders-h"></i> Modo de Control
+                        </div>
+                        
+                        <div class="modo-control">
+                            <div class="modo-texto" id="textoModo">Modo: AUTOMÁTICO</div>
+                            <button class="boton boton-warning boton-control" id="botonCambiarModo" onclick="cambiarModo()">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Cambiar a MODO MANUAL</span>
+                            </button>
+                        </div>
 
-                    <div class="controles-manuales" id="controlesManuales">
-                        <button class="boton boton-success boton-control" onclick="controlManual('ON')">
-                            <span>▶️</span>
-                            <span>Encender Bomba</span>
-                        </button>
-                        <button class="boton boton-danger boton-control" onclick="controlManual('OFF')">
-                            <span>⏹️</span>
-                            <span>Apagar Bomba</span>
-                        </button>
+                        <div class="controles-manuales" id="controlesManuales">
+                            <button class="boton boton-success boton-control" onclick="controlManual('ON')">
+                                <i class="fas fa-play"></i>
+                                <span>Encender Bomba</span>
+                            </button>
+                            <button class="boton boton-danger boton-control" onclick="controlManual('OFF')">
+                                <i class="fas fa-stop"></i>
+                                <span>Apagar Bomba</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -477,19 +648,24 @@
         
         <div class="botones-conexion">
             <button class="boton boton-primario" id="botonConectar" onclick="conectarArduino()">
-                <span>🔌</span>
+                <i class="fas fa-plug"></i>
                 <span>Conectar con Arduino</span>
             </button>
             
             <button class="boton boton-secundario" id="botonDesconectar" onclick="desconectarArduino()" disabled>
-                <span>🔓</span>
+                <i class="fas fa-power-off"></i>
                 <span>Desconectar</span>
             </button>
         </div>
         
-        <div class="logs" id="logContainer">
-            <div class="log-entry">Sistema listo. Haz clic en "Conectar con Arduino"</div>
-            <div class="log-entry">Calibración: 12cm = 0% vacío, 3.5cm = 100% lleno</div>
+        <div class="seccion-control">
+            <div class="titulo-seccion">
+                <i class="fas fa-clipboard-list"></i> Registro de Actividad
+            </div>
+            <div class="logs" id="logContainer">
+                <div class="log-entry">Sistema listo. Haz clic en "Conectar con Arduino"</div>
+                <div class="log-entry">Calibración: 12cm = 0% vacío, 3.5cm = 100% lleno</div>
+            </div>
         </div>
     </div>
 
@@ -528,6 +704,7 @@
         const botonCambiarModo = document.getElementById('botonCambiarModo');
         const textoModo = document.getElementById('textoModo');
         const controlesManuales = document.getElementById('controlesManuales');
+        const etiquetaActual = document.getElementById('etiquetaActual');
 
         // Función para calcular porcentaje (igual que en Arduino para consistencia)
         function calcularPorcentaje(distancia) {
@@ -561,7 +738,7 @@
         // Función para actualizar la UI
         function actualizarUI() {
             if (estado.conectado) {
-                estadoConexion.innerHTML = '<span>🟢</span><span>CONECTADO - Sistema calibrado activo</span>';
+                estadoConexion.innerHTML = '<div class="estado-conexion"><span class="indicador-estado indicador-conectado"></span><span>CONECTADO - Sistema calibrado activo</span></div>';
                 estadoConexion.className = 'estado conectado';
                 panelPrincipal.style.display = 'grid';
                 botonConectar.disabled = true;
@@ -570,7 +747,7 @@
                 // Actualizar interfaz según el modo
                 actualizarInterfazModo();
             } else {
-                estadoConexion.innerHTML = '<span>🔴</span><span>DESCONECTADO - Haz clic para conectar</span>';
+                estadoConexion.innerHTML = '<div class="estado-conexion"><span class="indicador-estado indicador-desconectado"></span><span>DESCONECTADO - Haz clic para conectar</span></div>';
                 estadoConexion.className = 'estado desconectado';
                 panelPrincipal.style.display = 'none';
                 botonConectar.disabled = false;
@@ -582,13 +759,13 @@
         function actualizarInterfazModo() {
             if (estado.modoManual) {
                 textoModo.textContent = 'Modo: MANUAL';
-                botonCambiarModo.innerHTML = '<span>🔄</span><span>Cambiar a MODO AUTOMÁTICO</span>';
+                botonCambiarModo.innerHTML = '<i class="fas fa-sync-alt"></i><span>Cambiar a MODO AUTOMÁTICO</span>';
                 controlesManuales.style.display = 'block';
                 infoBomba.textContent = 'Control manual activo';
                 infoBomba.style.color = '#fbbc05';
             } else {
                 textoModo.textContent = 'Modo: AUTOMÁTICO';
-                botonCambiarModo.innerHTML = '<span>🔄</span><span>Cambiar a MODO MANUAL</span>';
+                botonCambiarModo.innerHTML = '<i class="fas fa-sync-alt"></i><span>Cambiar a MODO MANUAL</span>';
                 controlesManuales.style.display = 'none';
                 infoBomba.textContent = 'Control automático activo';
                 infoBomba.style.color = '#5f6368';
@@ -660,10 +837,11 @@
             }
             
             // Mostrar distancia
-            valorDistancia.textContent = distancia.toFixed(1) + ' cm';
+            valorDistancia.innerHTML = distancia.toFixed(1) + '<span class="unidad">cm</span>';
             
             // Mostrar porcentaje
-            valorPorcentaje.textContent = estado.porcentaje + '%';
+            valorPorcentaje.innerHTML = estado.porcentaje + '<span class="unidad">%</span>';
+            etiquetaActual.textContent = estado.porcentaje + '%';
             
             // Actualizar barra de nivel con el porcentaje calibrado
             nivelAgua.style.width = estado.porcentaje + '%';
@@ -671,13 +849,13 @@
             // Actualizar estado de la bomba
             if (bombaEstado) {
                 estadoBomba.textContent = 'ENCENDIDA';
-                estadoBomba.className = 'valor-grande bomba-on';
-                iconoBomba.textContent = '🟢';
+                estadoBomba.style.color = '#34a853';
+                iconoBomba.innerHTML = '<i class="fas fa-circle" style="color: #34a853;"></i>';
                 iconoBomba.title = 'Bomba encendida - Llenando tanque';
             } else {
                 estadoBomba.textContent = 'APAGADA';
-                estadoBomba.className = 'valor-grande bomba-off';
-                iconoBomba.textContent = '🔴';
+                estadoBomba.style.color = '#ea4335';
+                iconoBomba.innerHTML = '<i class="fas fa-circle" style="color: #ea4335;"></i>';
                 iconoBomba.title = 'Bomba apagada - Tanque lleno';
             }
             
@@ -700,8 +878,8 @@
                     throw new Error('Web Serial API no soportada. Usa Chrome o Edge.');
                 }
 
-                estadoConexion.innerHTML = '<span>🟡</span><span>CONECTANDO...</span>';
-                estadoConexion.className = 'estado conectando';
+                estadoConexion.innerHTML = '<div class="estado-conexion"><span class="indicador-estado indicador-conectando"></span><span>CONECTANDO...</span></div>';
+                estadoConexion.className = 'estado conectado';
 
                 // Solicitar y abrir puerto
                 estado.puerto = await navigator.serial.requestPort();
