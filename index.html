@@ -13,6 +13,7 @@
             --success: #34a853;
             --success-light: #e6f4ea;
             --warning: #fbbc05;
+            --warning-light: #fef7e0;
             --danger: #ea4335;
             --danger-light: #fce8e6;
             --gray-50: #f8f9fa;
@@ -292,6 +293,49 @@
             color: var(--gray-400);
             cursor: not-allowed;
         }
+
+        .boton-control {
+            padding: 12px 24px;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        .boton-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .boton-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .boton-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .modo-control {
+            background: var(--warning-light);
+            border: 1px solid var(--warning);
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .modo-texto {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--gray-800);
+            margin-bottom: 12px;
+        }
+
+        .controles-manuales {
+            display: none;
+            text-align: center;
+            margin-top: 16px;
+        }
         
         .logs {
             background: var(--gray-50);
@@ -322,6 +366,11 @@
         .log-error {
             border-left-color: var(--danger);
             background: var(--danger-light);
+        }
+
+        .log-warning {
+            border-left-color: var(--warning);
+            background: var(--warning-light);
         }
         
         @media (max-width: 768px) {
@@ -403,6 +452,25 @@
                     <div class="info-bomba" id="infoBomba">
                         Control automático activo
                     </div>
+
+                    <div class="modo-control">
+                        <div class="modo-texto" id="textoModo">Modo: AUTOMÁTICO</div>
+                        <button class="boton boton-warning boton-control" id="botonCambiarModo" onclick="cambiarModo()">
+                            <span>🔄</span>
+                            <span>Cambiar a MODO MANUAL</span>
+                        </button>
+                    </div>
+
+                    <div class="controles-manuales" id="controlesManuales">
+                        <button class="boton boton-success boton-control" onclick="controlManual('ON')">
+                            <span>▶️</span>
+                            <span>Encender Bomba</span>
+                        </button>
+                        <button class="boton boton-danger boton-control" onclick="controlManual('OFF')">
+                            <span>⏹️</span>
+                            <span>Apagar Bomba</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -435,6 +503,7 @@
             distancia: 0,
             porcentaje: 0,
             bombaEncendida: false,
+            modoManual: false,
             bufferDatos: '',
             
             // Configuración de calibración
@@ -456,6 +525,9 @@
         const botonConectar = document.getElementById('botonConectar');
         const botonDesconectar = document.getElementById('botonDesconectar');
         const logContainer = document.getElementById('logContainer');
+        const botonCambiarModo = document.getElementById('botonCambiarModo');
+        const textoModo = document.getElementById('textoModo');
+        const controlesManuales = document.getElementById('controlesManuales');
 
         // Función para calcular porcentaje (igual que en Arduino para consistencia)
         function calcularPorcentaje(distancia) {
@@ -479,7 +551,8 @@
             const timestamp = new Date().toLocaleTimeString();
             const logEntry = document.createElement('div');
             logEntry.className = tipo === 'accion' ? 'log-entry log-accion' : 
-                                tipo === 'error' ? 'log-entry log-error' : 'log-entry';
+                                tipo === 'error' ? 'log-entry log-error' : 
+                                tipo === 'warning' ? 'log-entry log-warning' : 'log-entry';
             logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${mensaje}`;
             logContainer.appendChild(logEntry);
             logContainer.scrollTop = logContainer.scrollHeight;
@@ -493,6 +566,9 @@
                 panelPrincipal.style.display = 'grid';
                 botonConectar.disabled = true;
                 botonDesconectar.disabled = false;
+                
+                // Actualizar interfaz según el modo
+                actualizarInterfazModo();
             } else {
                 estadoConexion.innerHTML = '<span>🔴</span><span>DESCONECTADO - Haz clic para conectar</span>';
                 estadoConexion.className = 'estado desconectado';
@@ -502,10 +578,79 @@
             }
         }
 
+        // Función para actualizar interfaz según el modo
+        function actualizarInterfazModo() {
+            if (estado.modoManual) {
+                textoModo.textContent = 'Modo: MANUAL';
+                botonCambiarModo.innerHTML = '<span>🔄</span><span>Cambiar a MODO AUTOMÁTICO</span>';
+                controlesManuales.style.display = 'block';
+                infoBomba.textContent = 'Control manual activo';
+                infoBomba.style.color = '#fbbc05';
+            } else {
+                textoModo.textContent = 'Modo: AUTOMÁTICO';
+                botonCambiarModo.innerHTML = '<span>🔄</span><span>Cambiar a MODO MANUAL</span>';
+                controlesManuales.style.display = 'none';
+                infoBomba.textContent = 'Control automático activo';
+                infoBomba.style.color = '#5f6368';
+            }
+        }
+
+        // Función para cambiar entre modo manual y automático
+        async function cambiarModo() {
+            if (!estado.conectado || !estado.escritor) {
+                agregarLog('Error: No hay conexión con Arduino', 'error');
+                return;
+            }
+
+            estado.modoManual = !estado.modoManual;
+            
+            try {
+                const comando = estado.modoManual ? 'MODO:MANUAL\n' : 'MODO:AUTO\n';
+                await estado.escritor.write(new TextEncoder().encode(comando));
+                
+                if (estado.modoManual) {
+                    agregarLog('Modo cambiado a MANUAL - Control automático desactivado', 'warning');
+                } else {
+                    agregarLog('Modo cambiado a AUTOMÁTICO - Control automático activado', 'accion');
+                }
+                
+                actualizarInterfazModo();
+            } catch (error) {
+                agregarLog(`Error al cambiar modo: ${error.message}`, 'error');
+            }
+        }
+
+        // Función para control manual de la bomba
+        async function controlManual(accion) {
+            if (!estado.conectado || !estado.escritor) {
+                agregarLog('Error: No hay conexión con Arduino', 'error');
+                return;
+            }
+
+            if (!estado.modoManual) {
+                agregarLog('Error: El control manual solo está disponible en modo MANUAL', 'error');
+                return;
+            }
+
+            try {
+                const comando = `BOMBA:${accion}\n`;
+                await estado.escritor.write(new TextEncoder().encode(comando));
+                agregarLog(`Comando manual enviado: BOMBA ${accion}`, 'accion');
+            } catch (error) {
+                agregarLog(`Error al enviar comando manual: ${error.message}`, 'error');
+            }
+        }
+
         // Función para actualizar los datos del sensor
-        function actualizarDatosSensor(distancia, bombaEstado, porcentajeRecibido) {
+        function actualizarDatosSensor(distancia, bombaEstado, porcentajeRecibido, modoArduino) {
             estado.distancia = distancia;
             estado.bombaEncendida = bombaEstado;
+            
+            // Sincronizar modo con Arduino si se recibe
+            if (modoArduino !== undefined) {
+                estado.modoManual = modoArduino;
+                actualizarInterfazModo();
+            }
             
             // Calcular o usar el porcentaje recibido
             if (porcentajeRecibido !== undefined) {
@@ -529,19 +674,21 @@
                 estadoBomba.className = 'valor-grande bomba-on';
                 iconoBomba.textContent = '🟢';
                 iconoBomba.title = 'Bomba encendida - Llenando tanque';
-                infoBomba.textContent = 'Llenando tanque...';
-                infoBomba.style.color = '#34a853';
             } else {
                 estadoBomba.textContent = 'APAGADA';
                 estadoBomba.className = 'valor-grande bomba-off';
                 iconoBomba.textContent = '🔴';
                 iconoBomba.title = 'Bomba apagada - Tanque lleno';
-                infoBomba.textContent = 'Tanque lleno';
-                infoBomba.style.color = '#ea4335';
             }
             
-            // Log del estado
-            agregarLog(`Nivel: ${distancia.toFixed(1)}cm (${estado.porcentaje}%) - Bomba: ${bombaEstado ? 'ENCENDIDA' : 'APAGADA'}`);
+            // Actualizar info según modo
+            if (estado.modoManual) {
+                infoBomba.textContent = 'Control manual activo';
+                infoBomba.style.color = '#fbbc05';
+            } else {
+                infoBomba.textContent = bombaEstado ? 'Llenando tanque...' : 'Tanque lleno';
+                infoBomba.style.color = bombaEstado ? '#34a853' : '#ea4335';
+            }
         }
 
         // Función principal para conectar
@@ -577,8 +724,9 @@
                 // Marcar como conectado
                 estado.conectado = true;
                 estado.bufferDatos = '';
+                estado.modoManual = false; // Iniciar en modo automático
                 agregarLog('✅ CONEXIÓN EXITOSA con Arduino');
-                agregarLog('Sistema calibrado activado');
+                agregarLog('Sistema calibrado activado - Modo AUTOMÁTICO');
 
                 // Iniciar lectura de datos
                 leerDatosArduino();
@@ -625,12 +773,13 @@
                 linea = linea.trim();
                 if (!linea) return;
                 
-                // Procesar datos en formato: DISTANCIA:9.35,BOMBA:OFF,PORCENTAJE:45
+                // Procesar datos en formato: DISTANCIA:9.35,BOMBA:OFF,PORCENTAJE:45,MODO:AUTO
                 if (linea.includes('DISTANCIA:') && linea.includes('BOMBA:') && linea.includes('PORCENTAJE:')) {
                     const partes = linea.split(',');
                     let distancia = 0;
                     let bombaEstado = false;
                     let porcentaje = 0;
+                    let modoArduino = false;
                     
                     partes.forEach(parte => {
                         if (parte.startsWith('DISTANCIA:')) {
@@ -639,11 +788,13 @@
                             bombaEstado = parte.substring(6) === 'ON';
                         } else if (parte.startsWith('PORCENTAJE:')) {
                             porcentaje = parseInt(parte.substring(11));
+                        } else if (parte.startsWith('MODO:')) {
+                            modoArduino = parte.substring(5) === 'MANUAL';
                         }
                     });
                     
                     if (!isNaN(distancia)) {
-                        actualizarDatosSensor(distancia, bombaEstado, porcentaje);
+                        actualizarDatosSensor(distancia, bombaEstado, porcentaje, modoArduino);
                     }
                     
                 } else if (linea.startsWith('ACCION:')) {
@@ -654,6 +805,10 @@
                     agregarLog(`📏 ${linea}`, 'accion');
                 } else if (linea.includes('REGLA:')) {
                     agregarLog(`⚡ ${linea}`, 'accion');
+                } else if (linea.includes('MODO_CAMBIADO:')) {
+                    agregarLog(`🔄 ${linea.substring(14)}`, 'warning');
+                } else if (linea.includes('MANUAL:')) {
+                    agregarLog(`🎮 ${linea.substring(7)}`, 'accion');
                 } else {
                     agregarLog(`📨 ${linea}`);
                 }
@@ -678,6 +833,7 @@
             estado.distancia = 0;
             estado.porcentaje = 0;
             estado.bombaEncendida = false;
+            estado.modoManual = false;
             estado.bufferDatos = '';
             actualizarUI();
         }
