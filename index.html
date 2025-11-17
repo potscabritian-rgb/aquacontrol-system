@@ -1,248 +1,171 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Nivel - Sistema Estable</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Tus estilos CSS existentes aquí */
-        /* ... (mantener todos los estilos anteriores) ... */
-        
-        .estado-error {
-            background: var(--danger-light);
-            color: var(--danger);
-            border: 1px solid var(--danger);
+const int trigPin = 9;
+const int echoPin = 10;
+const int relayLlenado = 8;
+const int relayVaciado = 7;
+
+const float TANQUE_LLENO = 3.5;
+const float TANQUE_VACIO = 12.0;
+
+bool bombaLlenadoEncendida = false;
+bool bombaVaciadoEncendida = false;
+bool modoManual = false;
+String comandoSerial = "";
+
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(relayLlenado, OUTPUT);
+  pinMode(relayVaciado, OUTPUT);
+
+  digitalWrite(relayLlenado, LOW);
+  digitalWrite(relayVaciado, LOW);
+  bombaLlenadoEncendida = false;
+  bombaVaciadoEncendida = false;
+  modoManual = false;
+
+  Serial.begin(9600);
+  while (!Serial) {}
+  delay(2000);
+  Serial.println("SISTEMA_CALIBRADO_INICIADO");
+  Serial.println("CALIBRACION: 12.0cm=0%, 3.5cm=100%");
+  Serial.println("REGLA: BOMBA LLENADO ON si >3.5cm, OFF si <=3.5cm");
+  Serial.println("MODO: AUTO - Control automático activado");
+}
+
+void loop() {
+  procesarComandosSerial();
+  float distancia = medirDistancia();
+
+  if (!modoManual) {
+    controlAutomatico(distancia);
+  }
+
+  int porcentaje = calcularPorcentaje(distancia);
+
+  Serial.print("DISTANCIA:");
+  Serial.print(distancia, 2);
+  Serial.print(",BOMBA_LLENADO:");
+  Serial.print(bombaLlenadoEncendida ? "ON" : "OFF");
+  Serial.print(",BOMBA_VACIADO:");
+  Serial.print(bombaVaciadoEncendida ? "ON" : "OFF");
+  Serial.print(",PORCENTAJE:");
+  Serial.print(porcentaje);
+  Serial.print(",MODO:");
+  Serial.println(modoManual ? "MANUAL" : "AUTO");
+
+  delay(1000);
+}
+
+void procesarComandosSerial() {
+  while (Serial.available() > 0) {
+    char c = Serial.read();
+
+    if (c == '\n') {
+      comandoSerial.trim();
+
+      if (comandoSerial == "MODO:MANUAL") {
+        modoManual = true;
+        Serial.println("MODO_CAMBIADO: MANUAL - Control automático desactivado");
+        Serial.println("MANUAL: Use BOMBA:LLENADO_ON/OFF o BOMBA:VACIADO_ON/OFF para control manual");
+
+      } else if (comandoSerial == "MODO:AUTO") {
+        modoManual = false;
+        Serial.println("MODO_CAMBIADO: AUTOMÁTICO - Control automático activado");
+
+      } else if (comandoSerial == "BOMBA:LLENADO_ON") {
+        if (modoManual) {
+          digitalWrite(relayLlenado, HIGH);
+          bombaLlenadoEncendida = true;
+          Serial.println("MANUAL: Bomba de llenado encendida por comando");
+          Serial.println("ACCION: BOMBA_LLENADO_ENCENDIDA_MANUAL");
+        } else {
+          Serial.println("MANUAL: Comando ignorado - Modo automático activo");
+        }
+
+      } else if (comandoSerial == "BOMBA:LLENADO_OFF") {
+        if (modoManual) {
+          digitalWrite(relayLlenado, LOW);
+          bombaLlenadoEncendida = false;
+          Serial.println("MANUAL: Bomba de llenado apagada por comando");
+          Serial.println("ACCION: BOMBA_LLENADO_APAGADA_MANUAL");
+        } else {
+          Serial.println("MANUAL: Comando ignorado - Modo automático activo");
         }
         
-        .reconectar-boton {
-            margin-top: 10px;
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <div class="contenedor">
-        <!-- Tu HTML existente aquí -->
-        <!-- ... (mantener todo el HTML anterior) ... -->
-    </div>
-
-    <script>
-        // Estado del sistema calibrado
-        let estado = {
-            conectado: false,
-            puerto: null,
-            escritor: null,
-            lector: null,
-            distancia: 0,
-            porcentaje: 0,
-            bombaLlenadoEncendida: false,
-            bombaVaciadoEncendida: false,
-            modoManual: false,
-            bufferDatos: '',
-            intentandoReconectar: false,
-            tiempoUltimoDato: 0,
-            
-            // Configuración de calibración
-            calibracion: {
-                VACIO: 12.0,
-                LLENO: 3.5
-            }
-        };
-
-        // Elementos DOM (mantener los existentes)
-        // ...
-
-        // Función mejorada para conectar con Arduino
-        async function conectarArduino() {
-            if (estado.intentandoReconectar) return;
-            
-            agregarLog('Iniciando conexión con Arduino...');
-            
-            try {
-                if (!('serial' in navigator)) {
-                    throw new Error('Web Serial API no soportada. Usa Chrome o Edge.');
-                }
-
-                estadoConexion.innerHTML = '<div class="estado-conexion"><span class="indicador-estado indicador-conectando"></span><span>CONECTANDO...</span></div>';
-                estadoConexion.className = 'estado conectado';
-
-                // Solicitar y abrir puerto
-                estado.puerto = await navigator.serial.requestPort();
-                agregarLog('Puerto seleccionado');
-
-                await estado.puerto.open({ 
-                    baudRate: 9600,
-                    dataBits: 8,
-                    stopBits: 1,
-                    parity: 'none'
-                });
-                agregarLog('Puerto abierto exitosamente');
-
-                // Configurar escritor y lector
-                estado.escritor = estado.puerto.writable.getWriter();
-                const textDecoder = new TextDecoderStream();
-                const readableStreamClosed = estado.puerto.readable.pipeTo(textDecoder.writable);
-                estado.lector = textDecoder.readable.getReader();
-
-                // Marcar como conectado
-                estado.conectado = true;
-                estado.bufferDatos = '';
-                estado.modoManual = false;
-                estado.tiempoUltimoDato = Date.now();
-                estado.intentandoReconectar = false;
-                
-                agregarLog('✅ CONEXIÓN EXITOSA con Arduino', 'accion');
-                agregarLog('Sistema estable - Modo AUTOMÁTICO');
-
-                // Configurar detección de desconexión
-                estado.puerto.addEventListener('disconnect', () => {
-                    manejarDesconexion('Arduino desconectado físicamente');
-                });
-
-                // Iniciar monitoreo de conexión
-                iniciarMonitoreoConexion();
-                
-                // Iniciar lectura de datos
-                leerDatosArduino();
-
-            } catch (error) {
-                agregarLog(`❌ Error de conexión: ${error.message}`, 'error');
-                estado.conectado = false;
-                estado.intentandoReconectar = false;
-                mostrarBotonReconexion();
-            }
-
-            actualizarUI();
+      } else if (comandoSerial == "BOMBA:VACIADO_ON") {
+        if (modoManual) {
+          digitalWrite(relayVaciado, HIGH);
+          bombaVaciadoEncendida = true;
+          Serial.println("MANUAL: Bomba de vaciado encendida por comando");
+          Serial.println("ACCION: BOMBA_VACIADO_ENCENDIDA_MANUAL");
+        } else {
+          Serial.println("MANUAL: Comando ignorado - Modo automático activo");
         }
 
-        // Función para monitorear la conexión
-        function iniciarMonitoreoConexion() {
-            setInterval(() => {
-                if (estado.conectado) {
-                    const tiempoSinDatos = Date.now() - estado.tiempoUltimoDato;
-                    // Si pasan más de 5 segundos sin datos, considerar desconectado
-                    if (tiempoSinDatos > 5000) {
-                        manejarDesconexion('Timeout - Sin datos del Arduino');
-                    }
-                }
-            }, 1000);
+      } else if (comandoSerial == "BOMBA:VACIADO_OFF") {
+        if (modoManual) {
+          digitalWrite(relayVaciado, LOW);
+          bombaVaciadoEncendida = false;
+          Serial.println("MANUAL: Bomba de vaciado apagada por comando");
+          Serial.println("ACCION: BOMBA_VACIADO_APAGADA_MANUAL");
+        } else {
+          Serial.println("MANUAL: Comando ignorado - Modo automático activo");
         }
+      }
 
-        // Función mejorada para manejar desconexiones
-        function manejarDesconexion(razon) {
-            if (!estado.conectado) return;
-            
-            agregarLog(`⚠️ Desconexión detectada: ${razon}`, 'warning');
-            estado.conectado = false;
-            
-            // Intentar limpiar recursos
-            try {
-                if (estado.lector) {
-                    estado.lector.cancel().catch(() => {});
-                }
-                if (estado.escritor) {
-                    estado.escritor.close().catch(() => {});
-                }
-                if (estado.puerto) {
-                    estado.puerto.close().catch(() => {});
-                }
-            } catch (error) {
-                console.log('Error limpiando recursos:', error);
-            }
-            
-            estado.lector = null;
-            estado.escritor = null;
-            estado.puerto = null;
-            
-            actualizarUI();
-            mostrarBotonReconexion();
-        }
+      comandoSerial = "";
+    } else {
+      comandoSerial += c;
+    }
+  }
+}
 
-        // Función para mostrar botón de reconexión
-        function mostrarBotonReconexion() {
-            estadoConexion.innerHTML = `
-                <div class="estado-conexion">
-                    <span class="indicador-estado indicador-desconectado"></span>
-                    <span>DESCONECTADO - ${estado.intentandoReconectar ? 'Reconectando...' : 'Error de conexión'}</span>
-                </div>
-                ${!estado.intentandoReconectar ? 
-                    '<button class="boton boton-primario reconectar-boton" onclick="reconectarArduino()">Reconectar</button>' : 
-                    ''}
-            `;
-            estadoConexion.className = 'estado estado-error';
-        }
+float medirDistancia() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
 
-        // Función para reconectar automáticamente
-        async function reconectarArduino() {
-            estado.intentandoReconectar = true;
-            mostrarBotonReconexion();
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await conectarArduino();
-        }
+  long duracion = pulseIn(echoPin, HIGH, 30000);
 
-        // Función mejorada para leer datos
-        async function leerDatosArduino() {
-            try {
-                while (estado.conectado && estado.lector) {
-                    const { value, done } = await estado.lector.read();
-                    
-                    if (done) {
-                        manejarDesconexion('Conexión cerrada por el Arduino');
-                        break;
-                    }
-                    
-                    if (value) {
-                        estado.tiempoUltimoDato = Date.now();
-                        procesarDatosRecibidos(value);
-                    }
-                }
-            } catch (error) {
-                if (estado.conectado) {
-                    agregarLog(`Error leyendo datos: ${error.message}`, 'error');
-                    manejarDesconexion('Error de lectura');
-                }
-            }
-        }
+  if (duracion > 0) {
+    float distancia = duracion * 0.034 / 2;
+    if (distancia >= 2.0 && distancia <= 400.0) {
+      return distancia;
+    }
+  }
 
-        // Función mejorada para control manual con confirmación
-        async function controlManual(accion) {
-            if (!estado.conectado || !estado.escritor) {
-                agregarLog('Error: No hay conexión con Arduino', 'error');
-                return;
-            }
+  return 0.0;
+}
 
-            if (!estado.modoManual) {
-                agregarLog('Error: El control manual solo está disponible en modo MANUAL', 'error');
-                return;
-            }
+int calcularPorcentaje(float distancia) {
+  if (distancia >= TANQUE_VACIO) {
+    return 0;
+  } else if (distancia <= TANQUE_LLENO) {
+    return 100;
+  } else {
+    float rangoTotal = TANQUE_VACIO - TANQUE_LLENO;
+    float distanciaDesdeVacio = TANQUE_VACIO - distancia;
+    float porcentaje = (distanciaDesdeVacio / rangoTotal) * 100.0;
+    return constrain((int)porcentaje, 0, 100);
+  }
+}
 
-            try {
-                // Pequeña pausa antes de enviar comando
-                await new Promise(resolve => setTimeout(resolve, 50));
-                
-                const comando = `BOMBA:${accion}\n`;
-                await estado.escritor.write(new TextEncoder().encode(comando));
-                agregarLog(`Comando enviado: ${accion}`, 'accion');
-                
-                // Pequeña pausa después de enviar comando
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-            } catch (error) {
-                agregarLog(`Error al enviar comando: ${error.message}`, 'error');
-                manejarDesconexion('Error de escritura');
-            }
-        }
+void controlAutomatico(float distancia) {
+  // Control de bomba de llenado
+  if (distancia > TANQUE_LLENO && !bombaLlenadoEncendida && !bombaVaciadoEncendida) {
+    digitalWrite(relayLlenado, HIGH);
+    bombaLlenadoEncendida = true;
+    Serial.println("ACCION: BOMBA_LLENADO_ENCENDIDA (tanque no lleno)");
 
-        // Resto de tus funciones JavaScript...
-        // ... (mantener las demás funciones)
-
-        // Inicializar
-        actualizarUI();
-        agregarLog('Sistema de control mejorado listo');
-        agregarLog('Protecciones activadas contra picos de corriente');
-    </script>
-</body>
-</html>
+  } else if (distancia <= TANQUE_LLENO && bombaLlenadoEncendida) {
+    digitalWrite(relayLlenado, LOW);
+    bombaLlenadoEncendida = false;
+    Serial.println("ACCION: BOMBA_LLENADO_APAGADA (tanque lleno)");
+  }
+  
+  // Control de bomba de vaciado (opcional - se puede activar manualmente o con otro criterio)
+  // Por ejemplo, vaciar cuando se presiona un botón o cuando se alcanza cierto nivel
+  // En este ejemplo, la bomba de vaciado solo se controla manualmente
+}
