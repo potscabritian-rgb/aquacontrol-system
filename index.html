@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Nivel Calibrado</title>
+    <title>Control de Nivel Calibrado - Sistema Completo</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -17,6 +17,8 @@
             --warning-light: #fef7e0;
             --danger: #ea4335;
             --danger-light: #fce8e6;
+            --info: #4285f4;
+            --info-light: #e8f0fe;
             --gray-50: #f8f9fa;
             --gray-100: #f1f3f4;
             --gray-200: #e8eaed;
@@ -316,6 +318,11 @@
             color: white;
         }
 
+        .boton-info {
+            background: var(--info);
+            color: white;
+        }
+
         .modo-control {
             background: var(--warning-light);
             border: 1px solid var(--warning);
@@ -509,6 +516,61 @@
             gap: 10px;
         }
         
+        /* Estilos para el control de bombas */
+        .panel-bombas {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .bomba-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid var(--gray-200);
+            transition: var(--transition);
+        }
+        
+        .bomba-card.activa {
+            border-color: var(--success);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.2);
+        }
+        
+        .bomba-card h4 {
+            font-size: 16px;
+            color: var(--gray-800);
+            margin-bottom: 10px;
+        }
+        
+        .bomba-icono {
+            font-size: 40px;
+            margin: 10px 0;
+        }
+        
+        .bomba-estado {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+        
+        .bomba-encendida {
+            color: var(--success);
+        }
+        
+        .bomba-apagada {
+            color: var(--danger);
+        }
+        
+        .controles-bombas {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
         @media (max-width: 768px) {
             .contenedor {
                 padding: 24px;
@@ -526,6 +588,10 @@
             .contenedor-tarjetas {
                 grid-template-columns: 1fr;
             }
+            
+            .panel-bombas {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -533,7 +599,7 @@
     <div class="contenedor">
         <div class="header">
             <h1><i class="fas fa-tint"></i> Control de Nivel Calibrado</h1>
-            <p>Sistema de monitoreo y control con calibración precisa</p>
+            <p>Sistema de monitoreo y control con bomba de llenado y vaciado</p>
         </div>
         
         <div class="estado desconectado" id="estadoConexion">
@@ -548,7 +614,7 @@
                 <i class="fas fa-ruler"></i> CALIBRACIÓN: 12.0cm = 0% (Vacío) • 3.5cm = 100% (Lleno)
             </div>
             <div class="calibracion-regla">
-                <i class="fas fa-bolt"></i> REGLA: BOMBA ON si >3.5cm • BOMBA OFF si ≤3.5cm
+                <i class="fas fa-bolt"></i> REGLA: BOMBA LLENADO ON si >3.5cm • BOMBA LLENADO OFF si ≤3.5cm
             </div>
         </div>
         
@@ -600,45 +666,58 @@
             </div>
             
             <div class="info-box">
-                <h3><i class="fas fa-cog"></i> Control Bomba</h3>
+                <h3><i class="fas fa-cog"></i> Control de Bombas</h3>
                 
-                <div class="contenedor-tarjetas">
-                    <div class="tarjeta-datos">
-                        <h4>Estado de la bomba</h4>
-                        <div class="valor" id="estadoBomba">--</div>
-                        <div class="descripcion">Estado actual del sistema</div>
+                <div class="panel-bombas">
+                    <div class="bomba-card" id="bombaLlenadoCard">
+                        <h4>Bomba de Llenado</h4>
+                        <div class="bomba-icono" id="iconoBombaLlenado">
+                            <i class="fas fa-circle" style="color: #dadce0;"></i>
+                        </div>
+                        <div class="bomba-estado" id="estadoBombaLlenado">APAGADA</div>
+                        <div class="info-bomba" id="infoBombaLlenado">Sistema desconectado</div>
+                    </div>
+                    
+                    <div class="bomba-card" id="bombaVaciadoCard">
+                        <h4>Bomba de Vaciado</h4>
+                        <div class="bomba-icono" id="iconoBombaVaciado">
+                            <i class="fas fa-circle" style="color: #dadce0;"></i>
+                        </div>
+                        <div class="bomba-estado" id="estadoBombaVaciado">APAGADA</div>
+                        <div class="info-bomba" id="infoBombaVaciado">Sistema desconectado</div>
                     </div>
                 </div>
-                
-                <div class="control-bomba">
-                    <div class="icono-bomba" id="iconoBomba">
-                        <i class="fas fa-circle" style="color: #dadce0;"></i>
+
+                <div class="seccion-control">
+                    <div class="titulo-seccion">
+                        <i class="fas fa-sliders-h"></i> Modo de Control
                     </div>
-                    <div class="info-bomba" id="infoBomba">
-                        Sistema desconectado
+                    
+                    <div class="modo-control">
+                        <div class="modo-texto" id="textoModo">Modo: AUTOMÁTICO</div>
+                        <button class="boton boton-warning boton-control" id="botonCambiarModo" onclick="cambiarModo()">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Cambiar a MODO MANUAL</span>
+                        </button>
                     </div>
 
-                    <div class="seccion-control">
-                        <div class="titulo-seccion">
-                            <i class="fas fa-sliders-h"></i> Modo de Control
-                        </div>
-                        
-                        <div class="modo-control">
-                            <div class="modo-texto" id="textoModo">Modo: AUTOMÁTICO</div>
-                            <button class="boton boton-warning boton-control" id="botonCambiarModo" onclick="cambiarModo()">
-                                <i class="fas fa-sync-alt"></i>
-                                <span>Cambiar a MODO MANUAL</span>
-                            </button>
-                        </div>
-
-                        <div class="controles-manuales" id="controlesManuales">
-                            <button class="boton boton-success boton-control" onclick="controlManual('ON')">
+                    <div class="controles-manuales" id="controlesManuales">
+                        <div class="controles-bombas">
+                            <button class="boton boton-success boton-control" onclick="controlManual('LLENADO_ON')">
                                 <i class="fas fa-play"></i>
-                                <span>Encender Bomba</span>
+                                <span>Enc. Llenado</span>
                             </button>
-                            <button class="boton boton-danger boton-control" onclick="controlManual('OFF')">
+                            <button class="boton boton-danger boton-control" onclick="controlManual('LLENADO_OFF')">
                                 <i class="fas fa-stop"></i>
-                                <span>Apagar Bomba</span>
+                                <span>Ap. Llenado</span>
+                            </button>
+                            <button class="boton boton-info boton-control" onclick="controlManual('VACIADO_ON')">
+                                <i class="fas fa-play"></i>
+                                <span>Enc. Vaciado</span>
+                            </button>
+                            <button class="boton boton-warning boton-control" onclick="controlManual('VACIADO_OFF')">
+                                <i class="fas fa-stop"></i>
+                                <span>Ap. Vaciado</span>
                             </button>
                         </div>
                     </div>
@@ -663,8 +742,9 @@
                 <i class="fas fa-clipboard-list"></i> Registro de Actividad
             </div>
             <div class="logs" id="logContainer">
-                <div class="log-entry">Sistema listo. Haz clic en "Conectar con Arduino"</div>
+                <div class="log-entry">Sistema de control con dos bombas listo</div>
                 <div class="log-entry">Calibración: 12cm = 0% vacío, 3.5cm = 100% lleno</div>
+                <div class="log-entry">Haz clic en "Conectar con Arduino"</div>
             </div>
         </div>
     </div>
@@ -678,7 +758,8 @@
             lector: null,
             distancia: 0,
             porcentaje: 0,
-            bombaEncendida: false,
+            bombaLlenadoEncendida: false,
+            bombaVaciadoEncendida: false,
             modoManual: false,
             bufferDatos: '',
             
@@ -694,9 +775,14 @@
         const panelPrincipal = document.getElementById('panelPrincipal');
         const valorDistancia = document.getElementById('valorDistancia');
         const valorPorcentaje = document.getElementById('valorPorcentaje');
-        const estadoBomba = document.getElementById('estadoBomba');
-        const iconoBomba = document.getElementById('iconoBomba');
-        const infoBomba = document.getElementById('infoBomba');
+        const estadoBombaLlenado = document.getElementById('estadoBombaLlenado');
+        const iconoBombaLlenado = document.getElementById('iconoBombaLlenado');
+        const infoBombaLlenado = document.getElementById('infoBombaLlenado');
+        const bombaLlenadoCard = document.getElementById('bombaLlenadoCard');
+        const estadoBombaVaciado = document.getElementById('estadoBombaVaciado');
+        const iconoBombaVaciado = document.getElementById('iconoBombaVaciado');
+        const infoBombaVaciado = document.getElementById('infoBombaVaciado');
+        const bombaVaciadoCard = document.getElementById('bombaVaciadoCard');
         const nivelAgua = document.getElementById('nivelAgua');
         const botonConectar = document.getElementById('botonConectar');
         const botonDesconectar = document.getElementById('botonDesconectar');
@@ -761,14 +847,18 @@
                 textoModo.textContent = 'Modo: MANUAL';
                 botonCambiarModo.innerHTML = '<i class="fas fa-sync-alt"></i><span>Cambiar a MODO AUTOMÁTICO</span>';
                 controlesManuales.style.display = 'block';
-                infoBomba.textContent = 'Control manual activo';
-                infoBomba.style.color = '#fbbc05';
+                infoBombaLlenado.textContent = 'Control manual activo';
+                infoBombaLlenado.style.color = '#fbbc05';
+                infoBombaVaciado.textContent = 'Control manual activo';
+                infoBombaVaciado.style.color = '#fbbc05';
             } else {
                 textoModo.textContent = 'Modo: AUTOMÁTICO';
                 botonCambiarModo.innerHTML = '<i class="fas fa-sync-alt"></i><span>Cambiar a MODO MANUAL</span>';
                 controlesManuales.style.display = 'none';
-                infoBomba.textContent = 'Control automático activo';
-                infoBomba.style.color = '#5f6368';
+                infoBombaLlenado.textContent = 'Control automático activo';
+                infoBombaLlenado.style.color = '#5f6368';
+                infoBombaVaciado.textContent = 'Control automático activo';
+                infoBombaVaciado.style.color = '#5f6368';
             }
         }
 
@@ -797,7 +887,7 @@
             }
         }
 
-        // Función para control manual de la bomba
+        // Función para control manual de las bombas
         async function controlManual(accion) {
             if (!estado.conectado || !estado.escritor) {
                 agregarLog('Error: No hay conexión con Arduino', 'error');
@@ -812,16 +902,17 @@
             try {
                 const comando = `BOMBA:${accion}\n`;
                 await estado.escritor.write(new TextEncoder().encode(comando));
-                agregarLog(`Comando manual enviado: BOMBA ${accion}`, 'accion');
+                agregarLog(`Comando manual enviado: ${accion}`, 'accion');
             } catch (error) {
                 agregarLog(`Error al enviar comando manual: ${error.message}`, 'error');
             }
         }
 
         // Función para actualizar los datos del sensor
-        function actualizarDatosSensor(distancia, bombaEstado, porcentajeRecibido, modoArduino) {
+        function actualizarDatosSensor(distancia, bombaLlenadoEstado, bombaVaciadoEstado, porcentajeRecibido, modoArduino) {
             estado.distancia = distancia;
-            estado.bombaEncendida = bombaEstado;
+            estado.bombaLlenadoEncendida = bombaLlenadoEstado;
+            estado.bombaVaciadoEncendida = bombaVaciadoEstado;
             
             // Sincronizar modo con Arduino si se recibe
             if (modoArduino !== undefined) {
@@ -846,26 +937,48 @@
             // Actualizar barra de nivel con el porcentaje calibrado
             nivelAgua.style.width = estado.porcentaje + '%';
             
-            // Actualizar estado de la bomba
-            if (bombaEstado) {
-                estadoBomba.textContent = 'ENCENDIDA';
-                estadoBomba.style.color = '#34a853';
-                iconoBomba.innerHTML = '<i class="fas fa-circle" style="color: #34a853;"></i>';
-                iconoBomba.title = 'Bomba encendida - Llenando tanque';
-            } else {
-                estadoBomba.textContent = 'APAGADA';
-                estadoBomba.style.color = '#ea4335';
-                iconoBomba.innerHTML = '<i class="fas fa-circle" style="color: #ea4335;"></i>';
-                iconoBomba.title = 'Bomba apagada - Tanque lleno';
-            }
+            // Actualizar estado de la bomba de llenado
+            actualizarEstadoBombaLlenado();
             
-            // Actualizar info según modo
-            if (estado.modoManual) {
-                infoBomba.textContent = 'Control manual activo';
-                infoBomba.style.color = '#fbbc05';
+            // Actualizar estado de la bomba de vaciado
+            actualizarEstadoBombaVaciado();
+        }
+
+        // Función para actualizar el estado de la bomba de llenado
+        function actualizarEstadoBombaLlenado() {
+            if (estado.bombaLlenadoEncendida) {
+                estadoBombaLlenado.textContent = 'ENCENDIDA';
+                estadoBombaLlenado.className = 'bomba-estado bomba-encendida';
+                iconoBombaLlenado.innerHTML = '<i class="fas fa-circle" style="color: #34a853;"></i>';
+                bombaLlenadoCard.classList.add('activa');
+                infoBombaLlenado.textContent = estado.modoManual ? 'Control manual - Encendida' : 'Llenando tanque...';
+                infoBombaLlenado.style.color = '#34a853';
             } else {
-                infoBomba.textContent = bombaEstado ? 'Llenando tanque...' : 'Tanque lleno';
-                infoBomba.style.color = bombaEstado ? '#34a853' : '#ea4335';
+                estadoBombaLlenado.textContent = 'APAGADA';
+                estadoBombaLlenado.className = 'bomba-estado bomba-apagada';
+                iconoBombaLlenado.innerHTML = '<i class="fas fa-circle" style="color: #ea4335;"></i>';
+                bombaLlenadoCard.classList.remove('activa');
+                infoBombaLlenado.textContent = estado.modoManual ? 'Control manual - Apagada' : 'Tanque lleno o vaciando';
+                infoBombaLlenado.style.color = '#ea4335';
+            }
+        }
+
+        // Función para actualizar el estado de la bomba de vaciado
+        function actualizarEstadoBombaVaciado() {
+            if (estado.bombaVaciadoEncendida) {
+                estadoBombaVaciado.textContent = 'ENCENDIDA';
+                estadoBombaVaciado.className = 'bomba-estado bomba-encendida';
+                iconoBombaVaciado.innerHTML = '<i class="fas fa-circle" style="color: #34a853;"></i>';
+                bombaVaciadoCard.classList.add('activa');
+                infoBombaVaciado.textContent = estado.modoManual ? 'Control manual - Encendida' : 'Vaciando tanque...';
+                infoBombaVaciado.style.color = '#34a853';
+            } else {
+                estadoBombaVaciado.textContent = 'APAGADA';
+                estadoBombaVaciado.className = 'bomba-estado bomba-apagada';
+                iconoBombaVaciado.innerHTML = '<i class="fas fa-circle" style="color: #ea4335;"></i>';
+                bombaVaciadoCard.classList.remove('activa');
+                infoBombaVaciado.textContent = estado.modoManual ? 'Control manual - Apagada' : 'Tanque llenándose o vacío';
+                infoBombaVaciado.style.color = '#ea4335';
             }
         }
 
@@ -951,19 +1064,22 @@
                 linea = linea.trim();
                 if (!linea) return;
                 
-                // Procesar datos en formato: DISTANCIA:9.35,BOMBA:OFF,PORCENTAJE:45,MODO:AUTO
-                if (linea.includes('DISTANCIA:') && linea.includes('BOMBA:') && linea.includes('PORCENTAJE:')) {
+                // Procesar datos en formato: DISTANCIA:9.35,BOMBA_LLENADO:OFF,BOMBA_VACIADO:OFF,PORCENTAJE:45,MODO:AUTO
+                if (linea.includes('DISTANCIA:') && linea.includes('BOMBA_LLENADO:') && linea.includes('PORCENTAJE:')) {
                     const partes = linea.split(',');
                     let distancia = 0;
-                    let bombaEstado = false;
+                    let bombaLlenadoEstado = false;
+                    let bombaVaciadoEstado = false;
                     let porcentaje = 0;
                     let modoArduino = false;
                     
                     partes.forEach(parte => {
                         if (parte.startsWith('DISTANCIA:')) {
                             distancia = parseFloat(parte.substring(10));
-                        } else if (parte.startsWith('BOMBA:')) {
-                            bombaEstado = parte.substring(6) === 'ON';
+                        } else if (parte.startsWith('BOMBA_LLENADO:')) {
+                            bombaLlenadoEstado = parte.substring(14) === 'ON';
+                        } else if (parte.startsWith('BOMBA_VACIADO:')) {
+                            bombaVaciadoEstado = parte.substring(14) === 'ON';
                         } else if (parte.startsWith('PORCENTAJE:')) {
                             porcentaje = parseInt(parte.substring(11));
                         } else if (parte.startsWith('MODO:')) {
@@ -972,7 +1088,7 @@
                     });
                     
                     if (!isNaN(distancia)) {
-                        actualizarDatosSensor(distancia, bombaEstado, porcentaje, modoArduino);
+                        actualizarDatosSensor(distancia, bombaLlenadoEstado, bombaVaciadoEstado, porcentaje, modoArduino);
                     }
                     
                 } else if (linea.startsWith('ACCION:')) {
@@ -1010,7 +1126,8 @@
             estado.conectado = false;
             estado.distancia = 0;
             estado.porcentaje = 0;
-            estado.bombaEncendida = false;
+            estado.bombaLlenadoEncendida = false;
+            estado.bombaVaciadoEncendida = false;
             estado.modoManual = false;
             estado.bufferDatos = '';
             actualizarUI();
@@ -1018,7 +1135,7 @@
 
         // Inicializar
         actualizarUI();
-        agregarLog('Sistema de control calibrado listo');
+        agregarLog('Sistema de control con dos bombas listo');
         agregarLog('Calibración: 12cm = 0% vacío, 3.5cm = 100% lleno');
     </script>
 </body>
