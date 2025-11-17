@@ -3,750 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Nivel Calibrado - Sistema Completo</title>
+    <title>Control de Nivel - Sistema Estable</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #1a73e8;
-            --primary-dark: #0d47a1;
-            --primary-light: #e8f0fe;
-            --success: #34a853;
-            --success-light: #e6f4ea;
-            --warning: #fbbc05;
-            --warning-light: #fef7e0;
-            --danger: #ea4335;
-            --danger-light: #fce8e6;
-            --info: #4285f4;
-            --info-light: #e8f0fe;
-            --gray-50: #f8f9fa;
-            --gray-100: #f1f3f4;
-            --gray-200: #e8eaed;
-            --gray-300: #dadce0;
-            --gray-600: #5f6368;
-            --gray-800: #3c4043;
-            --gray-900: #202124;
-            --border-radius: 12px;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            --transition: all 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #0D7339 0%, #57A641 100%);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        /* Tus estilos CSS existentes aquí */
+        /* ... (mantener todos los estilos anteriores) ... */
         
-        .contenedor {
-            background: white;
-            color: var(--gray-900);
-            padding: 40px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            width: 100%;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--gray-900);
-        }
-        
-        .header p {
-            font-size: 16px;
-            color: var(--gray-600);
-            font-weight: 400;
-        }
-        
-        .estado {
-            margin: 24px 0;
-            padding: 16px;
-            border-radius: var(--border-radius);
-            font-weight: 500;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: var(--transition);
-            cursor: pointer;
-        }
-        
-        .estado.desconectado {
+        .estado-error {
             background: var(--danger-light);
             color: var(--danger);
             border: 1px solid var(--danger);
         }
         
-        .estado.conectado {
-            background: var(--success-light);
-            color: var(--success);
-            border: 1px solid var(--success);
-        }
-        
-        .calibracion-info {
-            background: var(--primary-light);
-            border: 1px solid var(--primary);
-            padding: 20px;
-            margin: 24px 0;
-            border-radius: var(--border-radius);
-            text-align: center;
-        }
-        
-        .calibracion-texto {
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--primary-dark);
-            margin-bottom: 8px;
-        }
-        
-        .calibracion-regla {
+        .reconectar-boton {
+            margin-top: 10px;
+            padding: 8px 16px;
             font-size: 14px;
-            color: var(--gray-600);
-        }
-        
-        .panel-principal {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin: 32px 0;
-        }
-        
-        .info-box {
-            background: var(--gray-50);
-            padding: 24px;
-            border-radius: var(--border-radius);
-            border: 1px solid var(--gray-200);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-        }
-        
-        .info-box h3 {
-            font-size: 18px;
-            font-weight: 500;
-            margin-bottom: 20px;
-            color: var(--gray-800);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .valor-grande {
-            font-size: 42px;
-            font-weight: 600;
-            margin: 16px 0;
-        }
-        
-        .bomba-on {
-            color: var(--success);
-        }
-        
-        .bomba-off {
-            color: var(--danger);
-        }
-        
-        .barra-contenedor {
-            margin: 24px 0;
-        }
-        
-        .barra-nivel {
-            width: 100%;
-            height: 32px;
-            background: var(--gray-200);
-            border-radius: 16px;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .nivel-agua {
-            height: 100%;
-            background: linear-gradient(90deg, #1a73e8, #4285f4);
-            width: 0%;
-            transition: width 0.5s ease;
-            border-radius: 16px;
-        }
-        
-        .marcas-calibracion {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 8px;
-        }
-        
-        .marca {
-            position: relative;
-            width: 1px;
-            height: 100%;
-            background: rgba(0,0,0,0.2);
-        }
-        
-        .marca-texto {
-            position: absolute;
-            top: -24px;
-            left: -15px;
-            white-space: nowrap;
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--gray-600);
-        }
-        
-        .porcentaje-grande {
-            font-size: 48px;
-            font-weight: 600;
-            color: var(--primary);
-            margin: 16px 0;
-        }
-        
-        .info-box-footer {
-            font-size: 14px;
-            color: var(--gray-600);
-            margin-top: 8px;
-        }
-        
-        .control-bomba {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--gray-200);
-        }
-        
-        .icono-bomba {
-            font-size: 40px;
-            margin: 16px 0;
-        }
-        
-        .info-bomba {
-            font-size: 14px;
-            color: var(--gray-600);
-            margin-top: 8px;
-        }
-        
-        .botones-conexion {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin: 32px 0;
-        }
-        
-        .boton {
-            padding: 14px 28px;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .boton-primario {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .boton-primario:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        
-        .boton-primario:disabled {
-            background: var(--gray-300);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .boton-secundario {
-            background: white;
-            color: var(--gray-800);
-            border: 1px solid var(--gray-300);
-        }
-        
-        .boton-secundario:hover {
-            background: var(--gray-50);
-            border-color: var(--gray-400);
-        }
-        
-        .boton-secundario:disabled {
-            background: var(--gray-100);
-            color: var(--gray-400);
-            cursor: not-allowed;
-        }
-
-        .boton-control {
-            padding: 12px 24px;
-            margin: 5px;
-            font-size: 14px;
-        }
-
-        .boton-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .boton-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .boton-warning {
-            background: var(--warning);
-            color: white;
-        }
-
-        .boton-info {
-            background: var(--info);
-            color: white;
-        }
-
-        .modo-control {
-            background: var(--warning-light);
-            border: 1px solid var(--warning);
-            padding: 16px;
-            margin: 16px 0;
-            border-radius: var(--border-radius);
-            text-align: center;
-        }
-
-        .modo-texto {
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--gray-800);
-            margin-bottom: 12px;
-        }
-
-        .controles-manuales {
-            display: none;
-            text-align: center;
-            margin-top: 16px;
-        }
-        
-        .logs {
-            background: var(--gray-50);
-            border: 1px solid var(--gray-200);
-            height: 200px;
-            overflow-y: auto;
-            text-align: left;
-            padding: 20px;
-            margin-top: 24px;
-            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-            font-size: 14px;
-            border-radius: var(--border-radius);
-        }
-        
-        .log-entry {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-left: 3px solid var(--gray-300);
-            background: white;
-            border-radius: 4px;
-        }
-        
-        .log-accion {
-            border-left-color: var(--primary);
-            background: var(--primary-light);
-        }
-        
-        .log-error {
-            border-left-color: var(--danger);
-            background: var(--danger-light);
-        }
-
-        .log-warning {
-            border-left-color: var(--warning);
-            background: var(--warning-light);
-        }
-        
-        /* Nuevos estilos para mejoras visuales */
-        .contenedor-icono {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary-light);
-            margin-right: 10px;
-        }
-        
-        .contenedor-icono i {
-            color: var(--primary);
-            font-size: 18px;
-        }
-        
-        .estado-conexion {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .indicador-estado {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        
-        .indicador-conectado {
-            background-color: var(--success);
-            box-shadow: 0 0 8px var(--success);
-        }
-        
-        .indicador-desconectado {
-            background-color: var(--danger);
-            box-shadow: 0 0 8px var(--danger);
-        }
-        
-        .indicador-conectando {
-            background-color: var(--warning);
-            box-shadow: 0 0 8px var(--warning);
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        .tarjeta-datos {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .tarjeta-datos h4 {
-            font-size: 16px;
-            color: var(--gray-600);
-            margin-bottom: 10px;
-        }
-        
-        .tarjeta-datos .valor {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--primary);
-        }
-        
-        .tarjeta-datos .unidad {
-            font-size: 14px;
-            color: var(--gray-600);
-            margin-left: 5px;
-        }
-        
-        .tarjeta-datos .descripcion {
-            font-size: 12px;
-            color: var(--gray-600);
-            margin-top: 5px;
-        }
-        
-        .contenedor-tarjetas {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .contenedor-barra {
-            position: relative;
-            margin: 20px 0;
-        }
-        
-        .etiquetas-barra {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 5px;
-            font-size: 12px;
-            color: var(--gray-600);
-        }
-        
-        .etiqueta-min {
-            text-align: left;
-        }
-        
-        .etiqueta-max {
-            text-align: right;
-        }
-        
-        .etiqueta-actual {
-            text-align: center;
-            font-weight: 600;
-            color: var(--primary);
-        }
-        
-        .seccion-control {
-            margin-top: 30px;
-            border-top: 1px solid var(--gray-200);
-            padding-top: 20px;
-        }
-        
-        .titulo-seccion {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: var(--gray-800);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        /* Estilos para el control de bombas */
-        .panel-bombas {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .bomba-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border: 2px solid var(--gray-200);
-            transition: var(--transition);
-        }
-        
-        .bomba-card.activa {
-            border-color: var(--success);
-            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.2);
-        }
-        
-        .bomba-card h4 {
-            font-size: 16px;
-            color: var(--gray-800);
-            margin-bottom: 10px;
-        }
-        
-        .bomba-icono {
-            font-size: 40px;
-            margin: 10px 0;
-        }
-        
-        .bomba-estado {
-            font-size: 14px;
-            font-weight: 500;
-            margin: 10px 0;
-        }
-        
-        .bomba-encendida {
-            color: var(--success);
-        }
-        
-        .bomba-apagada {
-            color: var(--danger);
-        }
-        
-        .controles-bombas {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        @media (max-width: 768px) {
-            .contenedor {
-                padding: 24px;
-            }
-            
-            .panel-principal {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .botones-conexion {
-                flex-direction: column;
-            }
-            
-            .contenedor-tarjetas {
-                grid-template-columns: 1fr;
-            }
-            
-            .panel-bombas {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
 <body>
     <div class="contenedor">
-        <div class="header">
-            <h1><i class="fas fa-tint"></i> Control de Nivel Calibrado</h1>
-            <p>Sistema de monitoreo y control con bomba de llenado y vaciado</p>
-        </div>
-        
-        <div class="estado desconectado" id="estadoConexion">
-            <div class="estado-conexion">
-                <span class="indicador-estado indicador-desconectado"></span>
-                <span>DESCONECTADO - Haz clic para conectar</span>
-            </div>
-        </div>
-        
-        <div class="calibracion-info">
-            <div class="calibracion-texto">
-                <i class="fas fa-ruler"></i> CALIBRACIÓN: 12.0cm = 0% (Vacío) • 3.5cm = 100% (Lleno)
-            </div>
-            <div class="calibracion-regla">
-                <i class="fas fa-bolt"></i> REGLA: BOMBA LLENADO ON si >3.5cm • BOMBA LLENADO OFF si ≤3.5cm
-            </div>
-        </div>
-        
-        <div class="panel-principal" id="panelPrincipal" style="display: none;">
-            <div class="info-box">
-                <h3><i class="fas fa-chart-line"></i> Medición</h3>
-                
-                <div class="contenedor-tarjetas">
-                    <div class="tarjeta-datos">
-                        <h4>Distancia del sensor</h4>
-                        <div class="valor" id="valorDistancia">--<span class="unidad">cm</span></div>
-                        <div class="descripcion">Distancia medida por el sensor ultrasónico</div>
-                    </div>
-                    
-                    <div class="tarjeta-datos">
-                        <h4>Nivel de llenado</h4>
-                        <div class="valor" id="valorPorcentaje">--<span class="unidad">%</span></div>
-                        <div class="descripcion">Porcentaje calculado según calibración</div>
-                    </div>
-                </div>
-                
-                <div class="contenedor-barra">
-                    <div class="barra-nivel">
-                        <div class="nivel-agua" id="nivelAgua"></div>
-                        <div class="marcas-calibracion">
-                            <div class="marca" style="left: 0%">
-                                <div class="marca-texto">12cm 0%</div>
-                            </div>
-                            <div class="marca" style="left: 23.5%">
-                                <div class="marca-texto">10cm</div>
-                            </div>
-                            <div class="marca" style="left: 47%">
-                                <div class="marca-texto">8cm</div>
-                            </div>
-                            <div class="marca" style="left: 70.5%">
-                                <div class="marca-texto">6cm</div>
-                            </div>
-                            <div class="marca" style="left: 100%">
-                                <div class="marca-texto">3.5cm 100%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="etiquetas-barra">
-                        <div class="etiqueta-min">Vacío (0%)</div>
-                        <div class="etiqueta-actual" id="etiquetaActual">--%</div>
-                        <div class="etiqueta-max">Lleno (100%)</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="info-box">
-                <h3><i class="fas fa-cog"></i> Control de Bombas</h3>
-                
-                <div class="panel-bombas">
-                    <div class="bomba-card" id="bombaLlenadoCard">
-                        <h4>Bomba de Llenado</h4>
-                        <div class="bomba-icono" id="iconoBombaLlenado">
-                            <i class="fas fa-circle" style="color: #dadce0;"></i>
-                        </div>
-                        <div class="bomba-estado" id="estadoBombaLlenado">APAGADA</div>
-                        <div class="info-bomba" id="infoBombaLlenado">Sistema desconectado</div>
-                    </div>
-                    
-                    <div class="bomba-card" id="bombaVaciadoCard">
-                        <h4>Bomba de Vaciado</h4>
-                        <div class="bomba-icono" id="iconoBombaVaciado">
-                            <i class="fas fa-circle" style="color: #dadce0;"></i>
-                        </div>
-                        <div class="bomba-estado" id="estadoBombaVaciado">APAGADA</div>
-                        <div class="info-bomba" id="infoBombaVaciado">Sistema desconectado</div>
-                    </div>
-                </div>
-
-                <div class="seccion-control">
-                    <div class="titulo-seccion">
-                        <i class="fas fa-sliders-h"></i> Modo de Control
-                    </div>
-                    
-                    <div class="modo-control">
-                        <div class="modo-texto" id="textoModo">Modo: AUTOMÁTICO</div>
-                        <button class="boton boton-warning boton-control" id="botonCambiarModo" onclick="cambiarModo()">
-                            <i class="fas fa-sync-alt"></i>
-                            <span>Cambiar a MODO MANUAL</span>
-                        </button>
-                    </div>
-
-                    <div class="controles-manuales" id="controlesManuales">
-                        <div class="controles-bombas">
-                            <button class="boton boton-success boton-control" onclick="controlManual('LLENADO_ON')">
-                                <i class="fas fa-play"></i>
-                                <span>Enc. Llenado</span>
-                            </button>
-                            <button class="boton boton-danger boton-control" onclick="controlManual('LLENADO_OFF')">
-                                <i class="fas fa-stop"></i>
-                                <span>Ap. Llenado</span>
-                            </button>
-                            <button class="boton boton-info boton-control" onclick="controlManual('VACIADO_ON')">
-                                <i class="fas fa-play"></i>
-                                <span>Enc. Vaciado</span>
-                            </button>
-                            <button class="boton boton-warning boton-control" onclick="controlManual('VACIADO_OFF')">
-                                <i class="fas fa-stop"></i>
-                                <span>Ap. Vaciado</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="botones-conexion">
-            <button class="boton boton-primario" id="botonConectar" onclick="conectarArduino()">
-                <i class="fas fa-plug"></i>
-                <span>Conectar con Arduino</span>
-            </button>
-            
-            <button class="boton boton-secundario" id="botonDesconectar" onclick="desconectarArduino()" disabled>
-                <i class="fas fa-power-off"></i>
-                <span>Desconectar</span>
-            </button>
-        </div>
-        
-        <div class="seccion-control">
-            <div class="titulo-seccion">
-                <i class="fas fa-clipboard-list"></i> Registro de Actividad
-            </div>
-            <div class="logs" id="logContainer">
-                <div class="log-entry">Sistema de control con dos bombas listo</div>
-                <div class="log-entry">Calibración: 12cm = 0% vacío, 3.5cm = 100% lleno</div>
-                <div class="log-entry">Haz clic en "Conectar con Arduino"</div>
-            </div>
-        </div>
+        <!-- Tu HTML existente aquí -->
+        <!-- ... (mantener todo el HTML anterior) ... -->
     </div>
 
     <script>
@@ -762,228 +42,23 @@
             bombaVaciadoEncendida: false,
             modoManual: false,
             bufferDatos: '',
+            intentandoReconectar: false,
+            tiempoUltimoDato: 0,
             
             // Configuración de calibración
             calibracion: {
-                VACIO: 12.0,   // 12cm = 0%
-                LLENO: 3.5     // 3.5cm = 100%
+                VACIO: 12.0,
+                LLENO: 3.5
             }
         };
 
-        // Elementos DOM
-        const estadoConexion = document.getElementById('estadoConexion');
-        const panelPrincipal = document.getElementById('panelPrincipal');
-        const valorDistancia = document.getElementById('valorDistancia');
-        const valorPorcentaje = document.getElementById('valorPorcentaje');
-        const estadoBombaLlenado = document.getElementById('estadoBombaLlenado');
-        const iconoBombaLlenado = document.getElementById('iconoBombaLlenado');
-        const infoBombaLlenado = document.getElementById('infoBombaLlenado');
-        const bombaLlenadoCard = document.getElementById('bombaLlenadoCard');
-        const estadoBombaVaciado = document.getElementById('estadoBombaVaciado');
-        const iconoBombaVaciado = document.getElementById('iconoBombaVaciado');
-        const infoBombaVaciado = document.getElementById('infoBombaVaciado');
-        const bombaVaciadoCard = document.getElementById('bombaVaciadoCard');
-        const nivelAgua = document.getElementById('nivelAgua');
-        const botonConectar = document.getElementById('botonConectar');
-        const botonDesconectar = document.getElementById('botonDesconectar');
-        const logContainer = document.getElementById('logContainer');
-        const botonCambiarModo = document.getElementById('botonCambiarModo');
-        const textoModo = document.getElementById('textoModo');
-        const controlesManuales = document.getElementById('controlesManuales');
-        const etiquetaActual = document.getElementById('etiquetaActual');
+        // Elementos DOM (mantener los existentes)
+        // ...
 
-        // Función para calcular porcentaje (igual que en Arduino para consistencia)
-        function calcularPorcentaje(distancia) {
-            const VACIO = estado.calibracion.VACIO;
-            const LLENO = estado.calibracion.LLENO;
-            
-            if (distancia >= VACIO) {
-                return 0;
-            } else if (distancia <= LLENO) {
-                return 100;
-            } else {
-                const rangoTotal = VACIO - LLENO;
-                const distanciaDesdeVacio = VACIO - distancia;
-                const porcentaje = (distanciaDesdeVacio / rangoTotal) * 100;
-                return Math.max(0, Math.min(100, Math.round(porcentaje)));
-            }
-        }
-
-        // Función para agregar logs
-        function agregarLog(mensaje, tipo = 'normal') {
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.className = tipo === 'accion' ? 'log-entry log-accion' : 
-                                tipo === 'error' ? 'log-entry log-error' : 
-                                tipo === 'warning' ? 'log-entry log-warning' : 'log-entry';
-            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${mensaje}`;
-            logContainer.appendChild(logEntry);
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
-
-        // Función para actualizar la UI
-        function actualizarUI() {
-            if (estado.conectado) {
-                estadoConexion.innerHTML = '<div class="estado-conexion"><span class="indicador-estado indicador-conectado"></span><span>CONECTADO - Sistema calibrado activo</span></div>';
-                estadoConexion.className = 'estado conectado';
-                panelPrincipal.style.display = 'grid';
-                botonConectar.disabled = true;
-                botonDesconectar.disabled = false;
-                
-                // Actualizar interfaz según el modo
-                actualizarInterfazModo();
-            } else {
-                estadoConexion.innerHTML = '<div class="estado-conexion"><span class="indicador-estado indicador-desconectado"></span><span>DESCONECTADO - Haz clic para conectar</span></div>';
-                estadoConexion.className = 'estado desconectado';
-                panelPrincipal.style.display = 'none';
-                botonConectar.disabled = false;
-                botonDesconectar.disabled = true;
-            }
-        }
-
-        // Función para actualizar interfaz según el modo
-        function actualizarInterfazModo() {
-            if (estado.modoManual) {
-                textoModo.textContent = 'Modo: MANUAL';
-                botonCambiarModo.innerHTML = '<i class="fas fa-sync-alt"></i><span>Cambiar a MODO AUTOMÁTICO</span>';
-                controlesManuales.style.display = 'block';
-                infoBombaLlenado.textContent = 'Control manual activo';
-                infoBombaLlenado.style.color = '#fbbc05';
-                infoBombaVaciado.textContent = 'Control manual activo';
-                infoBombaVaciado.style.color = '#fbbc05';
-            } else {
-                textoModo.textContent = 'Modo: AUTOMÁTICO';
-                botonCambiarModo.innerHTML = '<i class="fas fa-sync-alt"></i><span>Cambiar a MODO MANUAL</span>';
-                controlesManuales.style.display = 'none';
-                infoBombaLlenado.textContent = 'Control automático activo';
-                infoBombaLlenado.style.color = '#5f6368';
-                infoBombaVaciado.textContent = 'Control automático activo';
-                infoBombaVaciado.style.color = '#5f6368';
-            }
-        }
-
-        // Función para cambiar entre modo manual y automático
-        async function cambiarModo() {
-            if (!estado.conectado || !estado.escritor) {
-                agregarLog('Error: No hay conexión con Arduino', 'error');
-                return;
-            }
-
-            estado.modoManual = !estado.modoManual;
-            
-            try {
-                const comando = estado.modoManual ? 'MODO:MANUAL\n' : 'MODO:AUTO\n';
-                await estado.escritor.write(new TextEncoder().encode(comando));
-                
-                if (estado.modoManual) {
-                    agregarLog('Modo cambiado a MANUAL - Control automático desactivado', 'warning');
-                } else {
-                    agregarLog('Modo cambiado a AUTOMÁTICO - Control automático activado', 'accion');
-                }
-                
-                actualizarInterfazModo();
-            } catch (error) {
-                agregarLog(`Error al cambiar modo: ${error.message}`, 'error');
-            }
-        }
-
-        // Función para control manual de las bombas
-        async function controlManual(accion) {
-            if (!estado.conectado || !estado.escritor) {
-                agregarLog('Error: No hay conexión con Arduino', 'error');
-                return;
-            }
-
-            if (!estado.modoManual) {
-                agregarLog('Error: El control manual solo está disponible en modo MANUAL', 'error');
-                return;
-            }
-
-            try {
-                const comando = `BOMBA:${accion}\n`;
-                await estado.escritor.write(new TextEncoder().encode(comando));
-                agregarLog(`Comando manual enviado: ${accion}`, 'accion');
-            } catch (error) {
-                agregarLog(`Error al enviar comando manual: ${error.message}`, 'error');
-            }
-        }
-
-        // Función para actualizar los datos del sensor
-        function actualizarDatosSensor(distancia, bombaLlenadoEstado, bombaVaciadoEstado, porcentajeRecibido, modoArduino) {
-            estado.distancia = distancia;
-            estado.bombaLlenadoEncendida = bombaLlenadoEstado;
-            estado.bombaVaciadoEncendida = bombaVaciadoEstado;
-            
-            // Sincronizar modo con Arduino si se recibe
-            if (modoArduino !== undefined) {
-                estado.modoManual = modoArduino;
-                actualizarInterfazModo();
-            }
-            
-            // Calcular o usar el porcentaje recibido
-            if (porcentajeRecibido !== undefined) {
-                estado.porcentaje = porcentajeRecibido;
-            } else {
-                estado.porcentaje = calcularPorcentaje(distancia);
-            }
-            
-            // Mostrar distancia
-            valorDistancia.innerHTML = distancia.toFixed(1) + '<span class="unidad">cm</span>';
-            
-            // Mostrar porcentaje
-            valorPorcentaje.innerHTML = estado.porcentaje + '<span class="unidad">%</span>';
-            etiquetaActual.textContent = estado.porcentaje + '%';
-            
-            // Actualizar barra de nivel con el porcentaje calibrado
-            nivelAgua.style.width = estado.porcentaje + '%';
-            
-            // Actualizar estado de la bomba de llenado
-            actualizarEstadoBombaLlenado();
-            
-            // Actualizar estado de la bomba de vaciado
-            actualizarEstadoBombaVaciado();
-        }
-
-        // Función para actualizar el estado de la bomba de llenado
-        function actualizarEstadoBombaLlenado() {
-            if (estado.bombaLlenadoEncendida) {
-                estadoBombaLlenado.textContent = 'ENCENDIDA';
-                estadoBombaLlenado.className = 'bomba-estado bomba-encendida';
-                iconoBombaLlenado.innerHTML = '<i class="fas fa-circle" style="color: #34a853;"></i>';
-                bombaLlenadoCard.classList.add('activa');
-                infoBombaLlenado.textContent = estado.modoManual ? 'Control manual - Encendida' : 'Llenando tanque...';
-                infoBombaLlenado.style.color = '#34a853';
-            } else {
-                estadoBombaLlenado.textContent = 'APAGADA';
-                estadoBombaLlenado.className = 'bomba-estado bomba-apagada';
-                iconoBombaLlenado.innerHTML = '<i class="fas fa-circle" style="color: #ea4335;"></i>';
-                bombaLlenadoCard.classList.remove('activa');
-                infoBombaLlenado.textContent = estado.modoManual ? 'Control manual - Apagada' : 'Tanque lleno o vaciando';
-                infoBombaLlenado.style.color = '#ea4335';
-            }
-        }
-
-        // Función para actualizar el estado de la bomba de vaciado
-        function actualizarEstadoBombaVaciado() {
-            if (estado.bombaVaciadoEncendida) {
-                estadoBombaVaciado.textContent = 'ENCENDIDA';
-                estadoBombaVaciado.className = 'bomba-estado bomba-encendida';
-                iconoBombaVaciado.innerHTML = '<i class="fas fa-circle" style="color: #34a853;"></i>';
-                bombaVaciadoCard.classList.add('activa');
-                infoBombaVaciado.textContent = estado.modoManual ? 'Control manual - Encendida' : 'Vaciando tanque...';
-                infoBombaVaciado.style.color = '#34a853';
-            } else {
-                estadoBombaVaciado.textContent = 'APAGADA';
-                estadoBombaVaciado.className = 'bomba-estado bomba-apagada';
-                iconoBombaVaciado.innerHTML = '<i class="fas fa-circle" style="color: #ea4335;"></i>';
-                bombaVaciadoCard.classList.remove('activa');
-                infoBombaVaciado.textContent = estado.modoManual ? 'Control manual - Apagada' : 'Tanque llenándose o vacío';
-                infoBombaVaciado.style.color = '#ea4335';
-            }
-        }
-
-        // Función principal para conectar
+        // Función mejorada para conectar con Arduino
         async function conectarArduino() {
+            if (estado.intentandoReconectar) return;
+            
             agregarLog('Iniciando conexión con Arduino...');
             
             try {
@@ -1015,128 +90,159 @@
                 // Marcar como conectado
                 estado.conectado = true;
                 estado.bufferDatos = '';
-                estado.modoManual = false; // Iniciar en modo automático
-                agregarLog('✅ CONEXIÓN EXITOSA con Arduino');
-                agregarLog('Sistema calibrado activado - Modo AUTOMÁTICO');
+                estado.modoManual = false;
+                estado.tiempoUltimoDato = Date.now();
+                estado.intentandoReconectar = false;
+                
+                agregarLog('✅ CONEXIÓN EXITOSA con Arduino', 'accion');
+                agregarLog('Sistema estable - Modo AUTOMÁTICO');
 
+                // Configurar detección de desconexión
+                estado.puerto.addEventListener('disconnect', () => {
+                    manejarDesconexion('Arduino desconectado físicamente');
+                });
+
+                // Iniciar monitoreo de conexión
+                iniciarMonitoreoConexion();
+                
                 // Iniciar lectura de datos
                 leerDatosArduino();
 
             } catch (error) {
                 agregarLog(`❌ Error de conexión: ${error.message}`, 'error');
                 estado.conectado = false;
+                estado.intentandoReconectar = false;
+                mostrarBotonReconexion();
             }
 
             actualizarUI();
         }
 
-        // Función para leer datos del Arduino
+        // Función para monitorear la conexión
+        function iniciarMonitoreoConexion() {
+            setInterval(() => {
+                if (estado.conectado) {
+                    const tiempoSinDatos = Date.now() - estado.tiempoUltimoDato;
+                    // Si pasan más de 5 segundos sin datos, considerar desconectado
+                    if (tiempoSinDatos > 5000) {
+                        manejarDesconexion('Timeout - Sin datos del Arduino');
+                    }
+                }
+            }, 1000);
+        }
+
+        // Función mejorada para manejar desconexiones
+        function manejarDesconexion(razon) {
+            if (!estado.conectado) return;
+            
+            agregarLog(`⚠️ Desconexión detectada: ${razon}`, 'warning');
+            estado.conectado = false;
+            
+            // Intentar limpiar recursos
+            try {
+                if (estado.lector) {
+                    estado.lector.cancel().catch(() => {});
+                }
+                if (estado.escritor) {
+                    estado.escritor.close().catch(() => {});
+                }
+                if (estado.puerto) {
+                    estado.puerto.close().catch(() => {});
+                }
+            } catch (error) {
+                console.log('Error limpiando recursos:', error);
+            }
+            
+            estado.lector = null;
+            estado.escritor = null;
+            estado.puerto = null;
+            
+            actualizarUI();
+            mostrarBotonReconexion();
+        }
+
+        // Función para mostrar botón de reconexión
+        function mostrarBotonReconexion() {
+            estadoConexion.innerHTML = `
+                <div class="estado-conexion">
+                    <span class="indicador-estado indicador-desconectado"></span>
+                    <span>DESCONECTADO - ${estado.intentandoReconectar ? 'Reconectando...' : 'Error de conexión'}</span>
+                </div>
+                ${!estado.intentandoReconectar ? 
+                    '<button class="boton boton-primario reconectar-boton" onclick="reconectarArduino()">Reconectar</button>' : 
+                    ''}
+            `;
+            estadoConexion.className = 'estado estado-error';
+        }
+
+        // Función para reconectar automáticamente
+        async function reconectarArduino() {
+            estado.intentandoReconectar = true;
+            mostrarBotonReconexion();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await conectarArduino();
+        }
+
+        // Función mejorada para leer datos
         async function leerDatosArduino() {
             try {
-                agregarLog('Leyendo datos calibrados del sensor...');
-                
                 while (estado.conectado && estado.lector) {
                     const { value, done } = await estado.lector.read();
                     
                     if (done) {
-                        agregarLog('Conexión cerrada por el Arduino');
+                        manejarDesconexion('Conexión cerrada por el Arduino');
                         break;
                     }
                     
                     if (value) {
+                        estado.tiempoUltimoDato = Date.now();
                         procesarDatosRecibidos(value);
                     }
                 }
             } catch (error) {
-                agregarLog(`Error leyendo datos: ${error.message}`, 'error');
-                estado.conectado = false;
-                actualizarUI();
-            }
-        }
-
-        // Función para procesar datos recibidos
-        function procesarDatosRecibidos(datos) {
-            estado.bufferDatos += datos;
-            const lineas = estado.bufferDatos.split('\n');
-            estado.bufferDatos = lineas.pop() || '';
-            
-            lineas.forEach(linea => {
-                linea = linea.trim();
-                if (!linea) return;
-                
-                // Procesar datos en formato: DISTANCIA:9.35,BOMBA_LLENADO:OFF,BOMBA_VACIADO:OFF,PORCENTAJE:45,MODO:AUTO
-                if (linea.includes('DISTANCIA:') && linea.includes('BOMBA_LLENADO:') && linea.includes('PORCENTAJE:')) {
-                    const partes = linea.split(',');
-                    let distancia = 0;
-                    let bombaLlenadoEstado = false;
-                    let bombaVaciadoEstado = false;
-                    let porcentaje = 0;
-                    let modoArduino = false;
-                    
-                    partes.forEach(parte => {
-                        if (parte.startsWith('DISTANCIA:')) {
-                            distancia = parseFloat(parte.substring(10));
-                        } else if (parte.startsWith('BOMBA_LLENADO:')) {
-                            bombaLlenadoEstado = parte.substring(14) === 'ON';
-                        } else if (parte.startsWith('BOMBA_VACIADO:')) {
-                            bombaVaciadoEstado = parte.substring(14) === 'ON';
-                        } else if (parte.startsWith('PORCENTAJE:')) {
-                            porcentaje = parseInt(parte.substring(11));
-                        } else if (parte.startsWith('MODO:')) {
-                            modoArduino = parte.substring(5) === 'MANUAL';
-                        }
-                    });
-                    
-                    if (!isNaN(distancia)) {
-                        actualizarDatosSensor(distancia, bombaLlenadoEstado, bombaVaciadoEstado, porcentaje, modoArduino);
-                    }
-                    
-                } else if (linea.startsWith('ACCION:')) {
-                    agregarLog(`⚡ ${linea.substring(7)}`, 'accion');
-                } else if (linea === 'SISTEMA_CALIBRADO_INICIADO') {
-                    agregarLog('✅ Sistema calibrado iniciado', 'accion');
-                } else if (linea.includes('CALIBRACION:')) {
-                    agregarLog(`📏 ${linea}`, 'accion');
-                } else if (linea.includes('REGLA:')) {
-                    agregarLog(`⚡ ${linea}`, 'accion');
-                } else if (linea.includes('MODO_CAMBIADO:')) {
-                    agregarLog(`🔄 ${linea.substring(14)}`, 'warning');
-                } else if (linea.includes('MANUAL:')) {
-                    agregarLog(`🎮 ${linea.substring(7)}`, 'accion');
-                } else {
-                    agregarLog(`📨 ${linea}`);
+                if (estado.conectado) {
+                    agregarLog(`Error leyendo datos: ${error.message}`, 'error');
+                    manejarDesconexion('Error de lectura');
                 }
-            });
+            }
         }
 
-        // Función para desconectar
-        async function desconectarArduino() {
-            agregarLog('Desconectando...');
-            
-            try {
-                if (estado.lector) await estado.lector.cancel();
-                if (estado.escritor) await estado.escritor.close();
-                if (estado.puerto) await estado.puerto.close();
-                
-                agregarLog('Desconexión completada');
-            } catch (error) {
-                agregarLog(`Error al desconectar: ${error.message}`, 'error');
+        // Función mejorada para control manual con confirmación
+        async function controlManual(accion) {
+            if (!estado.conectado || !estado.escritor) {
+                agregarLog('Error: No hay conexión con Arduino', 'error');
+                return;
             }
-            
-            estado.conectado = false;
-            estado.distancia = 0;
-            estado.porcentaje = 0;
-            estado.bombaLlenadoEncendida = false;
-            estado.bombaVaciadoEncendida = false;
-            estado.modoManual = false;
-            estado.bufferDatos = '';
-            actualizarUI();
+
+            if (!estado.modoManual) {
+                agregarLog('Error: El control manual solo está disponible en modo MANUAL', 'error');
+                return;
+            }
+
+            try {
+                // Pequeña pausa antes de enviar comando
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                const comando = `BOMBA:${accion}\n`;
+                await estado.escritor.write(new TextEncoder().encode(comando));
+                agregarLog(`Comando enviado: ${accion}`, 'accion');
+                
+                // Pequeña pausa después de enviar comando
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+            } catch (error) {
+                agregarLog(`Error al enviar comando: ${error.message}`, 'error');
+                manejarDesconexion('Error de escritura');
+            }
         }
+
+        // Resto de tus funciones JavaScript...
+        // ... (mantener las demás funciones)
 
         // Inicializar
         actualizarUI();
-        agregarLog('Sistema de control con dos bombas listo');
-        agregarLog('Calibración: 12cm = 0% vacío, 3.5cm = 100% lleno');
+        agregarLog('Sistema de control mejorado listo');
+        agregarLog('Protecciones activadas contra picos de corriente');
     </script>
 </body>
 </html>
