@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Nivel Calibrado - Sistema Completo</title>
+    <title>Control de Nivel Calibrado - Sistema Completo con IoT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --primary: #1a73e8;
@@ -19,6 +20,8 @@
             --danger-light: #fce8e6;
             --info: #4285f4;
             --info-light: #e8f0fe;
+            --iot: #8e44ad;
+            --iot-light: #f3e5f5;
             --gray-50: #f8f9fa;
             --gray-100: #f1f3f4;
             --gray-200: #e8eaed;
@@ -39,15 +42,12 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background: linear-gradient(135deg, #0D7339 0%, #57A641 100%);
             color: white;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         
         .contenedor {
@@ -103,6 +103,12 @@
             border: 1px solid var(--success);
         }
         
+        .estado.iot-conectado {
+            background: var(--iot-light);
+            color: var(--iot);
+            border: 1px solid var(--iot);
+        }
+        
         .calibracion-info {
             background: var(--primary-light);
             border: 1px solid var(--primary);
@@ -122,6 +128,95 @@
         .calibracion-regla {
             font-size: 14px;
             color: var(--gray-600);
+        }
+        
+        .panel-iot {
+            background: var(--iot-light);
+            border: 1px solid var(--iot);
+            padding: 20px;
+            margin: 24px 0;
+            border-radius: var(--border-radius);
+        }
+        
+        .panel-iot h3 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: var(--iot);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .config-iot {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .input-grupo {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .input-grupo label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-800);
+        }
+        
+        .input-grupo input {
+            padding: 10px;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .botones-iot {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .boton-iot {
+            background: var(--iot);
+            color: white;
+        }
+        
+        .boton-iot:hover {
+            background: #7d3c98;
+            transform: translateY(-2px);
+        }
+        
+        .estadisticas-iot {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .tarjeta-iot {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .tarjeta-iot h4 {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+        
+        .tarjeta-iot .valor {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--iot);
         }
         
         .panel-principal {
@@ -381,6 +476,11 @@
             background: var(--warning-light);
         }
         
+        .log-iot {
+            border-left-color: var(--iot);
+            background: var(--iot-light);
+        }
+        
         /* Nuevos estilos para mejoras visuales */
         .contenedor-icono {
             display: inline-flex;
@@ -426,6 +526,11 @@
             background-color: var(--warning);
             box-shadow: 0 0 8px var(--warning);
             animation: pulse 1.5s infinite;
+        }
+        
+        .indicador-iot {
+            background-color: var(--iot);
+            box-shadow: 0 0 8px var(--iot);
         }
         
         @keyframes pulse {
@@ -592,20 +697,24 @@
             .panel-bombas {
                 grid-template-columns: 1fr;
             }
+            
+            .config-iot {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="contenedor">
         <div class="header">
-            <h1><i class="fas fa-tint"></i> Control de Nivel Calibrado</h1>
-            <p>Sistema de monitoreo y control con bomba de llenado y vaciado</p>
+            <h1><i class="fas fa-tint"></i> Control de Nivel Calibrado - IoT</h1>
+            <p>Sistema de monitoreo y control con Supabase IoT</p>
         </div>
         
         <div class="estado desconectado" id="estadoConexion">
             <div class="estado-conexion">
                 <span class="indicador-estado indicador-desconectado"></span>
-                <span>DESCONECTADO - Haz clic para conectar</span>
+                <span>DESCONECTADO - Configura Supabase primero</span>
             </div>
         </div>
         
@@ -615,6 +724,57 @@
             </div>
             <div class="calibracion-regla">
                 <i class="fas fa-bolt"></i> REGLA: BOMBA LLENADO ON si >3.5cm • BOMBA LLENADO OFF si ≤3.5cm
+            </div>
+        </div>
+        
+        <div class="panel-iot">
+            <h3><i class="fas fa-cloud"></i> Configuración Supabase IoT</h3>
+            <div class="config-iot">
+                <div class="input-grupo">
+                    <label for="supabaseUrl">URL de Supabase:</label>
+                    <input type="text" id="supabaseUrl" placeholder="https://tu-proyecto.supabase.co">
+                </div>
+                <div class="input-grupo">
+                    <label for="supabaseKey">API Key de Supabase:</label>
+                    <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                </div>
+                <div class="input-grupo">
+                    <label for="deviceId">ID del Dispositivo:</label>
+                    <input type="text" id="deviceId" value="tanque-001" placeholder="tanque-001">
+                </div>
+                <div class="input-grupo">
+                    <label for="tablaNombre">Nombre de la Tabla:</label>
+                    <input type="text" id="tablaNombre" value="nivel_tanque" placeholder="nivel_tanque">
+                </div>
+            </div>
+            <div class="botones-iot">
+                <button class="boton boton-iot" id="botonConectarIoT" onclick="inicializarSupabase()">
+                    <i class="fas fa-plug"></i>
+                    <span>Conectar Supabase</span>
+                </button>
+                <button class="boton boton-secundario" id="botonDesconectarIoT" onclick="desconectarSupabase()" disabled>
+                    <i class="fas fa-power-off"></i>
+                    <span>Desconectar IoT</span>
+                </button>
+            </div>
+            
+            <div class="estadisticas-iot">
+                <div class="tarjeta-iot">
+                    <h4>Estado IoT</h4>
+                    <div class="valor" id="estadoIoT">Desconectado</div>
+                </div>
+                <div class="tarjeta-iot">
+                    <h4>Datos Enviados</h4>
+                    <div class="valor" id="datosEnviados">0</div>
+                </div>
+                <div class="tarjeta-iot">
+                    <h4>Datos Recibidos</h4>
+                    <div class="valor" id="datosRecibidos">0</div>
+                </div>
+                <div class="tarjeta-iot">
+                    <h4>Última Actualización</h4>
+                    <div class="valor" id="ultimaActualizacion">--:--</div>
+                </div>
             </div>
         </div>
         
@@ -742,9 +902,9 @@
                 <i class="fas fa-clipboard-list"></i> Registro de Actividad
             </div>
             <div class="logs" id="logContainer">
-                <div class="log-entry">Sistema de control con dos bombas listo</div>
+                <div class="log-entry">Sistema de control con Supabase IoT listo</div>
                 <div class="log-entry">Calibración: 12cm = 0% vacío, 3.5cm = 100% lleno</div>
-                <div class="log-entry">Haz clic en "Conectar con Arduino"</div>
+                <div class="log-entry">Configura Supabase y haz clic en "Conectar con Arduino"</div>
             </div>
         </div>
     </div>
@@ -767,6 +927,19 @@
             calibracion: {
                 VACIO: 12.0,   // 12cm = 0%
                 LLENO: 3.5     // 3.5cm = 100%
+            },
+            
+            // Estado IoT Supabase
+            iot: {
+                supabase: null,
+                conectado: false,
+                url: "",
+                key: "",
+                deviceId: "tanque-001",
+                tablaNombre: "nivel_tanque",
+                datosEnviados: 0,
+                datosRecibidos: 0,
+                ultimaActualizacion: null
             }
         };
 
@@ -791,6 +964,14 @@
         const textoModo = document.getElementById('textoModo');
         const controlesManuales = document.getElementById('controlesManuales');
         const etiquetaActual = document.getElementById('etiquetaActual');
+        
+        // Elementos IoT
+        const botonConectarIoT = document.getElementById('botonConectarIoT');
+        const botonDesconectarIoT = document.getElementById('botonDesconectarIoT');
+        const estadoIoT = document.getElementById('estadoIoT');
+        const datosEnviados = document.getElementById('datosEnviados');
+        const datosRecibidos = document.getElementById('datosRecibidos');
+        const ultimaActualizacion = document.getElementById('ultimaActualizacion');
 
         // Función para calcular porcentaje (igual que en Arduino para consistencia)
         function calcularPorcentaje(distancia) {
@@ -815,7 +996,8 @@
             const logEntry = document.createElement('div');
             logEntry.className = tipo === 'accion' ? 'log-entry log-accion' : 
                                 tipo === 'error' ? 'log-entry log-error' : 
-                                tipo === 'warning' ? 'log-entry log-warning' : 'log-entry';
+                                tipo === 'warning' ? 'log-entry log-warning' : 
+                                tipo === 'iot' ? 'log-entry log-iot' : 'log-entry';
             logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${mensaje}`;
             logContainer.appendChild(logEntry);
             logContainer.scrollTop = logContainer.scrollHeight;
@@ -839,6 +1021,209 @@
                 botonConectar.disabled = false;
                 botonDesconectar.disabled = true;
             }
+            
+            // Actualizar estado IoT
+            actualizarEstadoIoT();
+        }
+
+        // Función para actualizar estado IoT
+        function actualizarEstadoIoT() {
+            if (estado.iot.conectado) {
+                estadoIoT.textContent = "Conectado";
+                estadoIoT.style.color = "var(--iot)";
+                botonConectarIoT.disabled = true;
+                botonDesconectarIoT.disabled = false;
+                
+                // Actualizar contadores
+                datosEnviados.textContent = estado.iot.datosEnviados;
+                datosRecibidos.textContent = estado.iot.datosRecibidos;
+                
+                if (estado.iot.ultimaActualizacion) {
+                    ultimaActualizacion.textContent = estado.iot.ultimaActualizacion.toLocaleTimeString();
+                }
+                
+                estadoConexion.innerHTML = '<div class="estado-conexion"><span class="indicador-estado indicador-iot"></span><span>CONECTADO - Sistema IoT activo</span></div>';
+                estadoConexion.className = 'estado iot-conectado';
+            } else {
+                estadoIoT.textContent = "Desconectado";
+                estadoIoT.style.color = "var(--gray-600)";
+                botonConectarIoT.disabled = false;
+                botonDesconectarIoT.disabled = true;
+            }
+        }
+
+        // Función para inicializar Supabase
+        async function inicializarSupabase() {
+            estado.iot.url = document.getElementById('supabaseUrl').value;
+            estado.iot.key = document.getElementById('supabaseKey').value;
+            estado.iot.deviceId = document.getElementById('deviceId').value;
+            estado.iot.tablaNombre = document.getElementById('tablaNombre').value;
+
+            if (!estado.iot.url || !estado.iot.key) {
+                agregarLog('❌ Error: Ingresa la URL y API Key de Supabase', 'error');
+                return;
+            }
+
+            agregarLog('🔗 Conectando a Supabase...', 'iot');
+
+            try {
+                // Inicializar Supabase
+                estado.iot.supabase = supabase.createClient(estado.iot.url, estado.iot.key);
+                
+                // Probar la conexión
+                const { data, error } = await estado.iot.supabase
+                    .from(estado.iot.tablaNombre)
+                    .select('*')
+                    .limit(1);
+
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        agregarLog('⚠️ Tabla no encontrada. Creando estructura...', 'warning');
+                        await crearEstructuraTabla();
+                    } else {
+                        throw error;
+                    }
+                }
+
+                estado.iot.conectado = true;
+                estado.iot.datosEnviados = 0;
+                estado.iot.datosRecibidos = 0;
+                estado.iot.ultimaActualizacion = new Date();
+                
+                agregarLog('✅ Conexión a Supabase establecida', 'iot');
+                agregarLog('📊 Sistema IoT listo para enviar y recibir datos', 'iot');
+
+                // Iniciar monitoreo en tiempo real
+                iniciarMonitoreoTiempoReal();
+
+            } catch (error) {
+                agregarLog(`❌ Error de conexión: ${error.message}`, 'error');
+                agregarLog('💡 Asegúrate de que la tabla exista en Supabase', 'error');
+            }
+        }
+
+        // Función para crear la estructura de la tabla
+        async function crearEstructuraTabla() {
+            agregarLog('📋 Ejecuta este SQL en el editor de Supabase:', 'iot');
+            agregarLog(`
+                CREATE TABLE IF NOT EXISTS nivel_tanque (
+                    id BIGSERIAL PRIMARY KEY,
+                    device_id TEXT,
+                    distancia DECIMAL,
+                    porcentaje INTEGER,
+                    bomba_llenado BOOLEAN,
+                    bomba_vaciado BOOLEAN,
+                    modo_manual BOOLEAN DEFAULT false,
+                    timestamp TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+                );
+            `, 'iot');
+        }
+
+        // Función para iniciar monitoreo en tiempo real
+        function iniciarMonitoreoTiempoReal() {
+            if (!estado.iot.supabase) return;
+
+            // Suscribirse a cambios en la tabla
+            estado.iot.supabase
+                .channel('nivel-tanque-changes')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: estado.iot.tablaNombre
+                    },
+                    (payload) => {
+                        estado.iot.datosRecibidos++;
+                        estado.iot.ultimaActualizacion = new Date();
+                        actualizarEstadoIoT();
+                        
+                        agregarLog(`📨 Cambio en Supabase: ${payload.eventType}`, 'iot');
+                        if (payload.new && payload.new.device_id !== estado.iot.deviceId) {
+                            // Actualizar interfaz con datos de otros dispositivos
+                            actualizarInterfazDesdeIoT(payload.new);
+                        }
+                    }
+                )
+                .subscribe();
+        }
+
+        // Función para enviar datos a Supabase
+        async function enviarDatosSupabase() {
+            if (!estado.iot.supabase || !estado.iot.conectado) {
+                return;
+            }
+
+            const datos = {
+                device_id: estado.iot.deviceId,
+                distancia: estado.distancia,
+                porcentaje: estado.porcentaje,
+                bomba_llenado: estado.bombaLlenadoEncendida,
+                bomba_vaciado: estado.bombaVaciadoEncendida,
+                modo_manual: estado.modoManual,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                const { data, error } = await estado.iot.supabase
+                    .from(estado.iot.tablaNombre)
+                    .insert([datos])
+                    .select();
+
+                if (error) throw error;
+
+                estado.iot.datosEnviados++;
+                estado.iot.ultimaActualizacion = new Date();
+                actualizarEstadoIoT();
+
+            } catch (error) {
+                agregarLog(`❌ Error al enviar datos a Supabase: ${error.message}`, 'error');
+            }
+        }
+
+        // Función para actualizar interfaz desde datos IoT
+        function actualizarInterfazDesdeIoT(datos) {
+            // Solo actualizar si los datos son de otro dispositivo
+            if (datos.device_id && datos.device_id !== estado.iot.deviceId) {
+                agregarLog(`🔄 Sincronizando con dispositivo: ${datos.device_id}`, 'iot');
+                
+                if (datos.distancia !== undefined) {
+                    estado.distancia = datos.distancia;
+                    valorDistancia.innerHTML = estado.distancia.toFixed(1) + '<span class="unidad">cm</span>';
+                }
+                
+                if (datos.porcentaje !== undefined) {
+                    estado.porcentaje = datos.porcentaje;
+                    valorPorcentaje.innerHTML = estado.porcentaje + '<span class="unidad">%</span>';
+                    nivelAgua.style.width = estado.porcentaje + '%';
+                    etiquetaActual.textContent = estado.porcentaje + '%';
+                }
+                
+                if (datos.bomba_llenado !== undefined) {
+                    estado.bombaLlenadoEncendida = datos.bomba_llenado;
+                    actualizarEstadoBombaLlenado();
+                }
+                
+                if (datos.bomba_vaciado !== undefined) {
+                    estado.bombaVaciadoEncendida = datos.bomba_vaciado;
+                    actualizarEstadoBombaVaciado();
+                }
+                
+                if (datos.modo_manual !== undefined) {
+                    estado.modoManual = datos.modo_manual;
+                    actualizarInterfazModo();
+                }
+            }
+        }
+
+        // Función para desconectar Supabase
+        function desconectarSupabase() {
+            if (estado.iot.supabase) {
+                estado.iot.supabase.removeAllChannels();
+                agregarLog('🔌 Desconectado de Supabase', 'iot');
+            }
+            estado.iot.conectado = false;
+            actualizarEstadoIoT();
         }
 
         // Función para actualizar interfaz según el modo
@@ -882,6 +1267,9 @@
                 }
                 
                 actualizarInterfazModo();
+                
+                // Enviar cambio de modo a Supabase
+                enviarDatosSupabase();
             } catch (error) {
                 agregarLog(`Error al cambiar modo: ${error.message}`, 'error');
             }
@@ -903,6 +1291,9 @@
                 const comando = `BOMBA:${accion}\n`;
                 await estado.escritor.write(new TextEncoder().encode(comando));
                 agregarLog(`Comando manual enviado: ${accion}`, 'accion');
+                
+                // Enviar comando a Supabase
+                enviarDatosSupabase();
             } catch (error) {
                 agregarLog(`Error al enviar comando manual: ${error.message}`, 'error');
             }
@@ -942,6 +1333,9 @@
             
             // Actualizar estado de la bomba de vaciado
             actualizarEstadoBombaVaciado();
+            
+            // Enviar datos a Supabase si está conectado
+            enviarDatosSupabase();
         }
 
         // Función para actualizar el estado de la bomba de llenado
@@ -1135,8 +1529,9 @@
 
         // Inicializar
         actualizarUI();
-        agregarLog('Sistema de control con dos bombas listo');
+        agregarLog('Sistema de control con Supabase IoT listo');
         agregarLog('Calibración: 12cm = 0% vacío, 3.5cm = 100% lleno');
+        agregarLog('Configura Supabase para habilitar la sincronización en la nube');
     </script>
 </body>
 </html>
